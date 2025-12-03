@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bullet Journal Builder – Wireframe</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --border: #d5d9df;
+      --accent: #3b6df6;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --grid: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .title {
+      font-weight: 700;
+      margin-right: 16px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 12px;
+      padding: 12px 16px 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .palette h2,
+    .canvas h2 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+    .search {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .category {
+      margin-bottom: 12px;
+    }
+    .category h3 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .widget-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .widget {
+      border: 1px dashed var(--border);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafbfc;
+    }
+    .widget .add {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      background: #fff;
+    }
+    .canvas {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+    .page {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      padding: 16px;
+      min-height: 700px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .page-inner {
+      width: 816px; /* US Letter portrait width at 96dpi approx */
+      height: 1056px; /* US Letter portrait height at 96dpi approx */
+      background:
+        linear-gradient(0deg, transparent 23px, var(--grid) 24px),
+        linear-gradient(90deg, transparent 23px, var(--grid) 24px);
+      background-size: 24px 24px;
+      border: 1px solid var(--grid);
+      position: relative;
+      overflow: hidden;
+    }
+    .widget-instance {
+      position: absolute;
+      background: #fdfdfd;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .widget-instance .remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .page-footer {
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .grid-controls button {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Bullet Journal Builder</div>
+    <div class="actions">
+      <button>New Page</button>
+      <button>Undo</button>
+      <button>Redo</button>
+      <button>Import JSON</button>
+      <button>Export JSON</button>
+      <button class="primary">Export PDF</button>
+    </div>
+    <div class="status">US Letter · Portrait · Grid on</div>
+  </header>
+
+  <main>
+    <section class="panel palette" aria-label="Widget palette">
+      <h2>Widgets</h2>
+      <input class="search" type="search" placeholder="Search widgets" aria-label="Search widgets" />
+
+      <div class="category">
+        <h3>Essentials</h3>
+        <div class="widget-list">
+          <div class="widget">Current Date <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Notes <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Todo <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Daily Schedule <span class="add" aria-hidden="true">+</span></div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>Trackers</h3>
+        <div class="widget-list">
+          <div class="widget">Habit Tracker <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Mood Tracker <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Gratitude Log <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Pomodoro <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">Time Tracker <span class="add" aria-hidden="true">+</span></div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>Calendars</h3>
+        <div class="widget-list">
+          <div class="widget">Month Calendar <span class="add" aria-hidden="true">+</span></div>
+          <div class="widget">3-Month Calendar <span class="add" aria-hidden="true">+</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="canvas" aria-label="Page canvas">
+      <h2>Page</h2>
+      <div class="page">
+        <div class="page-inner">
+          <div class="widget-instance" style="top: 48px; left: 48px; width: 200px; height: 120px;">
+            <div class="remove" aria-hidden="true">×</div>
+            <strong>Month Calendar</strong>
+          </div>
+          <div class="widget-instance" style="top: 200px; left: 48px; width: 180px; height: 140px;">
+            <div class="remove" aria-hidden="true">×</div>
+            <strong>Todo</strong>
+          </div>
+          <div class="widget-instance" style="top: 48px; left: 280px; width: 220px; height: 120px;">
+            <div class="remove" aria-hidden="true">×</div>
+            <strong>Habit Tracker</strong>
+          </div>
+        </div>
+      </div>
+      <div class="page-footer">
+        <div>Tab to navigate widgets. Space to add. Del to remove. Undo/Redo available.</div>
+        <div class="grid-controls">
+          <button>Show/Hide Grid</button>
+          <button>Zoom -</button>
+          <button>Zoom +</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
