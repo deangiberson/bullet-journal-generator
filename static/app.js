@@ -41,6 +41,7 @@
   const toastContainer = document.getElementById("toast-container");
   const commandPalette = document.getElementById("command-palette");
   const commandInput = document.getElementById("command-input");
+  let ghostEl = null;
 
   const paletteCodes = new Map(); // widget id -> code
   const state = {
@@ -54,6 +55,7 @@
     selectMode: false,
     codeBuffer: "",
     codeMap: [],
+    drag: null,
   };
 
   function cloneWidgets(list = state.widgets) {
@@ -172,36 +174,21 @@
   }
 
   function attachDrag(el, widget) {
-    let dragData = null;
     el.addEventListener("pointerdown", (event) => {
-      dragData = {
+      event.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+      startDrag({
         pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        startRow: widget.row,
-        startCol: widget.col,
-      };
-      el.setPointerCapture(event.pointerId);
-    });
-
-    el.addEventListener("pointerup", (event) => {
-      if (!dragData) return;
-      el.releasePointerCapture(event.pointerId);
-      const deltaX = event.clientX - dragData.startX;
-      const deltaY = event.clientY - dragData.startY;
-      const newLeft = GRID.padding + dragData.startCol * GRID.cell + deltaX;
-      const newTop = GRID.padding + dragData.startRow * GRID.cell + deltaY;
-      const newCol = Math.round((newLeft - GRID.padding) / GRID.cell);
-      const newRow = Math.round((newTop - GRID.padding) / GRID.cell);
-      if (newRow === dragData.startRow && newCol === dragData.startCol) {
-        dragData = null;
-        return;
-      }
-      const moved = moveWidget(widget.id, newRow, newCol);
-      if (!moved) {
-        showToast("Cannot move: blocked or out of bounds.");
-      }
-      dragData = null;
+        mode: "existing",
+        widgetId: widget.id,
+        widgetType: widget.type,
+        width: widget.width,
+        height: widget.height,
+        offsetX,
+        offsetY,
+      });
     });
   }
 
@@ -308,6 +295,9 @@
   function moveWidget(id, newRow, newCol) {
     const widget = state.widgets.find((w) => w.id === id);
     if (!widget) return false;
+    if (widget.row === newRow && widget.col === newCol) {
+      return true;
+    }
     if (!areaFree(newRow, newCol, widget.width, widget.height, id)) {
       return false;
     }
@@ -566,6 +556,98 @@
     }
   }
 
+  function ensureGhost() {
+    if (!ghostEl) {
+      ghostEl = document.createElement("div");
+      ghostEl.className = "widget-ghost";
+      pageInner.appendChild(ghostEl);
+    }
+    return ghostEl;
+  }
+
+  function clearGhost() {
+    if (ghostEl) {
+      ghostEl.remove();
+      ghostEl = null;
+    }
+  }
+
+  function startDrag({ pointerId, mode, widgetId, widgetType, width, height, offsetX, offsetY }) {
+    if (state.drag) return;
+    state.drag = {
+      pointerId,
+      mode,
+      widgetId,
+      widgetType,
+      width,
+      height,
+      offsetX,
+      offsetY,
+      valid: false,
+      targetRow: null,
+      targetCol: null,
+    };
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerup", handlePointerUp);
+    document.addEventListener("pointercancel", handlePointerCancel);
+    ensureGhost();
+  }
+
+  function handlePointerMove(event) {
+    if (!state.drag || state.drag.pointerId !== event.pointerId) return;
+    const rect = pageInner.getBoundingClientRect();
+    const x = event.clientX - rect.left - state.drag.offsetX;
+    const y = event.clientY - rect.top - state.drag.offsetY;
+    const col = Math.round((x - GRID.padding) / GRID.cell);
+    const row = Math.round((y - GRID.padding) / GRID.cell);
+    if (!Number.isFinite(row) || !Number.isFinite(col)) return;
+    const valid =
+      row >= 0 &&
+      col >= 0 &&
+      row + state.drag.height <= GRID.rows &&
+      col + state.drag.width <= GRID.cols &&
+      areaFree(row, col, state.drag.width, state.drag.height, state.drag.mode === "existing" ? state.drag.widgetId : null);
+    state.drag.valid = valid;
+    state.drag.targetRow = row;
+    state.drag.targetCol = col;
+
+    const ghost = ensureGhost();
+    ghost.style.width = `${state.drag.width * GRID.cell}px`;
+    ghost.style.height = `${state.drag.height * GRID.cell}px`;
+    ghost.style.left = `${GRID.padding + col * GRID.cell}px`;
+    ghost.style.top = `${GRID.padding + row * GRID.cell}px`;
+    ghost.classList.toggle("invalid", !valid);
+  }
+
+  function finishDrag(apply) {
+    if (!state.drag) return;
+    const drag = state.drag;
+    if (apply && drag.valid && Number.isInteger(drag.targetRow) && Number.isInteger(drag.targetCol)) {
+      if (drag.mode === "existing") {
+        const moved = moveWidget(drag.widgetId, drag.targetRow, drag.targetCol);
+        if (!moved) showToast("Cannot move: blocked or out of bounds.");
+      } else if (drag.mode === "palette") {
+        const placed = addWidget(drag.widgetType, drag.targetRow, drag.targetCol);
+        if (!placed) showToast("Cannot place widget here.");
+      }
+    }
+    clearGhost();
+    state.drag = null;
+    document.removeEventListener("pointermove", handlePointerMove);
+    document.removeEventListener("pointerup", handlePointerUp);
+    document.removeEventListener("pointercancel", handlePointerCancel);
+  }
+
+  function handlePointerUp(event) {
+    if (!state.drag || state.drag.pointerId !== event.pointerId) return;
+    finishDrag(true);
+  }
+
+  function handlePointerCancel(event) {
+    if (!state.drag || state.drag.pointerId !== event.pointerId) return;
+    finishDrag(false);
+  }
+
   function handleCodeSelection(code, providedRow = null, providedCol = null) {
     const target = state.codeMap.find((entry) => entry.code === code);
     if (!target) {
@@ -620,6 +702,26 @@
         state.selectedId = null;
         renderSelection();
       }
+    });
+
+    categoriesEl.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      const target = event.target.closest(".widget-item");
+      if (!target) return;
+      if (event.target.closest(".add")) return;
+      const widgetId = target.dataset.widgetId;
+      const def = getWidgetDef(widgetId);
+      if (!def) return;
+      event.preventDefault();
+      startDrag({
+        pointerId: event.pointerId,
+        mode: "palette",
+        widgetType: widgetId,
+        width: def.defaultSize[0],
+        height: def.defaultSize[1],
+        offsetX: def.defaultSize[0] * GRID.cell * 0.5,
+        offsetY: def.defaultSize[1] * GRID.cell * 0.5,
+      });
     });
   }
 
