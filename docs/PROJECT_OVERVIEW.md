@@ -10,6 +10,7 @@
 - Grid: 24 px cells, no gutter. This yields 30 columns × 40 rows in the usable area.
 - Widget sizes (v1): fixed variants snapping to the grid; allowed sizes: 1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4 (expand later if needed). All variants must be defined in grid cells.
 - Hard snap; drop rejected on overlap or overflow. Flat plane; no z-order.
+- Drag-and-drop: drag from palette or existing widgets; snap-preview ghost shows placement (blue = valid, red = blocked) before drop.
 - Removal via explicit control. Undo/redo required for placement and removal.
 - Import/export: JSON serialization of the layout model; load JSON to restore layout.
 - Local storage only for persistence in v1.
@@ -19,7 +20,7 @@
 
 - Client-side generation targeting visual parity with the on-screen layout. Fonts, sizing, and positioning should match grid placement; parity can be relaxed if needed.
 - Default paper size: US Letter, portrait.
-- Stack: html2canvas to rasterize the fixed-size page container, jsPDF to place the image on a US Letter PDF at 1:1 scale. Embed chosen fonts in CSS to keep screen/PDF aligned.
+- Stack: HTML box model (chosen) with html2canvas to rasterize the fixed-size page container and jsPDF to place the image on a US Letter PDF at 1:1 scale. Embed chosen fonts in CSS to keep screen/PDF aligned. Scripts are currently loaded from CDN in the page.
 
 ## Rendering & Export Options (evaluated)
 - Pure SVG Surface: render page as SVG; export by converting SVG to PDF. Precise and scalable; needs HTML overlays for inputs/focus.
@@ -58,7 +59,7 @@
 
 - Keyboard-first command palette triggered by `/`; `Esc` cancels any mode, `Enter` confirms, `Tab` cycles normally.
 - Selection mode: press `s` after `/` to enter select; one/two-letter codes shown in the top-left of selectable items (new and existing). Codes stay stable relative to on-screen order/positions, scanning left-to-right, top-to-bottom by grid lines.
-- Placement: after picking a widget, choose row then column via key input (grid addressed in row, then column order); snap enforced.
+- Placement: after picking a widget, choose row then column; today this is prompted when using keyboard codes. Snap enforced; blocked placements show an error toast and do not change layout.
 - Removal: select an existing widget via codes and press `Delete` to remove.
 - Error handling: invalid row/col or blocked placement shows a toast with the error and returns to root (idle) mode.
 - Focus and hints: palette and widget codes remain keyboard-addressable; clear focus states after each action; hints persist so shortcuts are discoverable.
