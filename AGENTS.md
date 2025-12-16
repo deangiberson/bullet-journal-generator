@@ -5,6 +5,14 @@
 - Build a minimal web application that lets users create printable bullet journal pages on a grid template with drag-and-drop widgets and ultimately export to PDF.
 - Favor client-side rendering/interaction for the page builder unless there is a clear reason it cannot meet requirements (performance, security, or PDF fidelity).
 
+## bd workflow (issue tracking)
+- `bd init` is already done; use bd for all work (no markdown TODO lists). Hooks/merge driver are installed.
+- Find next tasks: `bd ready --json`. Show details: `bd show <id> --json`.
+- Create/update/close: `bd create "title" --description "context" -t task -p 2`, `bd update <id> --status in_progress`, `bd close <id> --reason "done"`.
+- Link discoveries: `bd create "title" --description "context" -p 2 --deps discovered-from:<parent-id>`.
+- Regenerate guide if needed: `bd onboard --output .beads/BD_GUIDE.md`. After upgrades run `bd info --whats-new` then `bd hooks install`.
+- Always end a session with `bd sync`.
+
 ## Stack & Tooling
 - Backend: Python Flask for serving the app and any required APIs.
 - Package management: `uv`.
