@@ -188,9 +188,10 @@
   function attachDrag(el, widget) {
     el.addEventListener("pointerdown", (event) => {
       event.preventDefault();
+      const zoom = getZoomScale();
       const rect = el.getBoundingClientRect();
-      const offsetX = event.clientX - rect.left;
-      const offsetY = event.clientY - rect.top;
+      const offsetX = (event.clientX - rect.left) / zoom;
+      const offsetY = (event.clientY - rect.top) / zoom;
       startDrag({
         pointerId: event.pointerId,
         mode: "existing",
@@ -649,9 +650,10 @@
 
   function handlePointerMove(event) {
     if (!state.drag || state.drag.pointerId !== event.pointerId) return;
+    const zoom = getZoomScale();
     const rect = pageInner.getBoundingClientRect();
-    const x = event.clientX - rect.left - state.drag.offsetX;
-    const y = event.clientY - rect.top - state.drag.offsetY;
+    const x = (event.clientX - rect.left) / zoom - state.drag.offsetX;
+    const y = (event.clientY - rect.top) / zoom - state.drag.offsetY;
     const col = Math.round((x - GRID.padding) / GRID.cell);
     const row = Math.round((y - GRID.padding) / GRID.cell);
     if (!Number.isFinite(row) || !Number.isFinite(col)) return;
@@ -676,13 +678,19 @@
   function finishDrag(apply) {
     if (!state.drag) return;
     const drag = state.drag;
-    if (apply && drag.valid && Number.isInteger(drag.targetRow) && Number.isInteger(drag.targetCol)) {
-      if (drag.mode === "existing") {
-        const moved = moveWidget(drag.widgetId, drag.targetRow, drag.targetCol);
-        if (!moved) showToast("Cannot move: blocked or out of bounds.");
-      } else if (drag.mode === "palette") {
-        const placed = addWidget(drag.widgetType, drag.targetRow, drag.targetCol);
-        if (!placed) showToast("Cannot place widget here.");
+    if (apply) {
+      if (drag.valid && Number.isInteger(drag.targetRow) && Number.isInteger(drag.targetCol)) {
+        if (drag.mode === "existing") {
+          const moved = moveWidget(drag.widgetId, drag.targetRow, drag.targetCol);
+          if (!moved) showToast("Cannot move: blocked or out of bounds.");
+        } else if (drag.mode === "palette") {
+          const placed = addWidget(drag.widgetType, drag.targetRow, drag.targetCol);
+          if (!placed) showToast("Cannot place widget here.");
+        }
+      } else if (drag.mode === "existing") {
+        showToast("Cannot move: blocked or out of bounds.");
+      } else {
+        showToast("Cannot place widget here.");
       }
     }
     clearGhost();
@@ -690,6 +698,13 @@
     document.removeEventListener("pointermove", handlePointerMove);
     document.removeEventListener("pointerup", handlePointerUp);
     document.removeEventListener("pointercancel", handlePointerCancel);
+  }
+
+  function getZoomScale() {
+    const rect = pageInner.getBoundingClientRect();
+    const unscaledWidth = pageInner.offsetWidth || GRID.totalWidth;
+    const scale = rect.width / unscaledWidth;
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
   }
 
   function handlePointerUp(event) {
