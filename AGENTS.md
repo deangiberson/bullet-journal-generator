@@ -11,7 +11,8 @@
 - Create/update/close: `bd create "title" --description "context" -t task -p 2`, `bd update <id> --status in_progress`, `bd close <id> --reason "done"`.
 - Link discoveries: `bd create "title" --description "context" -p 2 --deps discovered-from:<parent-id>`.
 - Regenerate guide if needed: `bd onboard --output .beads/BD_GUIDE.md`. After upgrades run `bd info --whats-new` then `bd hooks install`.
-- Always end a session with `bd sync`.
+- Only commit beads changes as part of the feature commit they belong to (no separate beads-only commits).
+- When committing a feature, mention the current bead in the detailed commit message.
 
 ## Stack & Tooling
 - Backend: Python Flask for serving the app and any required APIs.
