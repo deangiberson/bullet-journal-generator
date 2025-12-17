@@ -43,6 +43,8 @@
   const commandInput = document.getElementById("command-input");
   let ghostEl = null;
 
+  const fontsReady = loadInterFonts();
+
   const paletteCodes = new Map(); // widget id -> code
   const state = {
     widgets: [],
@@ -57,6 +59,15 @@
     codeMap: [],
     drag: null,
   };
+
+  function loadInterFonts() {
+    if (!(document.fonts?.load)) {
+      return Promise.resolve();
+    }
+    const weights = [400, 500, 600, 700];
+    const requests = weights.map((weight) => document.fonts.load(`${weight} 1em "Inter"`));
+    return Promise.allSettled(requests).then(() => document.fonts.ready);
+  }
 
   function cloneWidgets(list = state.widgets) {
     return list.map((w) => ({ ...w }));
@@ -404,18 +415,23 @@
     input.click();
   }
 
-  function exportPdf() {
-    if (window.html2canvas && window.jspdf?.jsPDF) {
-      const { jsPDF } = window.jspdf;
-      window.html2canvas(pageInner, { scale: 2 }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "pt", [GRID.totalWidth, GRID.totalHeight]);
-        pdf.addImage(imgData, "PNG", 0, 0, GRID.totalWidth, GRID.totalHeight);
-        pdf.save("bullet-journal.pdf");
-      });
-    } else {
+  async function exportPdf() {
+    if (!(window.html2canvas && window.jspdf?.jsPDF)) {
       showToast("PDF export requires html2canvas and jsPDF on the page.");
+      return;
     }
+    // Ensure embedded fonts are loaded before capturing for PDF parity.
+    if (fontsReady) {
+      await fontsReady.catch(() => {});
+    } else if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+    const { jsPDF } = window.jspdf;
+    const canvas = await window.html2canvas(pageInner, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "pt", [GRID.totalWidth, GRID.totalHeight]);
+    pdf.addImage(imgData, "PNG", 0, 0, GRID.totalWidth, GRID.totalHeight);
+    pdf.save("bullet-journal.pdf");
   }
 
   function toggleGrid() {
@@ -725,7 +741,8 @@
     });
   }
 
-  function init() {
+  async function init() {
+    await fontsReady.catch(() => {});
     hydrate();
     render();
     setZoom(state.zoom);

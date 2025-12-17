@@ -73,7 +73,7 @@
 - A simple structural mock lives at `docs/wireframe.html` showing header actions (new/undo/redo/import/export/PDF), widget palette on the left, US Letter portrait grid canvas with sample widgets, and hints/footer controls.
 
 ## Visual Design (guidance)
-- Typeface: modern sans like Inter (preferred) or Plus Jakarta Sans; weights 400/500/600.
+- Typeface: Inter (locked); bundled locally (woff2/woff) at 400/500/600/700 and preloaded so screen/PDF stay aligned.
 - Color system: cool neutrals with a single accent (e.g., electric blue #3b6df6 or cyan #32c1ff). Dark shell option: bg #0f1115, panels #161921, borders #1f2430, text #e9edf5, muted #9aa3b5. Light option: bg #f7f8fb, panels #ffffff, borders #d8dde6, text #1b1f2a, muted #6b7280.
 - Layout/shape: 8 px spacing scale, 8–10 px corner radius, 1 px borders/dividers, subtle shadows on widgets.
 - Components: compact header with pill buttons; primary action in accent. Palette with minimal outlines and subtle hover/focus glow. Canvas grid crisp; widgets with thin border, soft shadow; code badges top-right with accent text on muted background. Toasts bottom-right/center with short text and accent edge.
