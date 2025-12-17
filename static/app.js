@@ -14,6 +14,7 @@
     },
   };
 
+  const PDF_EXPORT_SCALE = 2;
   const WIDGETS = [
     { id: "current-date", name: "Current Date", defaultSize: [3, 1] },
     { id: "month-calendar", name: "Month Calendar", defaultSize: [6, 4] },
@@ -420,18 +421,55 @@
       showToast("PDF export requires html2canvas and jsPDF on the page.");
       return;
     }
+    try {
+      await ensureFontsReadyForPdf();
+      const { imgData, width, height } = await renderPageToImage();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "px",
+        format: [width, height],
+        compress: true,
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, width, height, undefined, "FAST");
+      pdf.save("bullet-journal.pdf");
+    } catch (err) {
+      console.error("PDF export failed", err);
+      showToast("PDF export failed. Please try again.");
+    }
+  }
+
+  async function ensureFontsReadyForPdf() {
     // Ensure embedded fonts are loaded before capturing for PDF parity.
     if (fontsReady) {
       await fontsReady.catch(() => {});
     } else if (document.fonts?.ready) {
       await document.fonts.ready;
     }
-    const { jsPDF } = window.jspdf;
-    const canvas = await window.html2canvas(pageInner, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "pt", [GRID.totalWidth, GRID.totalHeight]);
-    pdf.addImage(imgData, "PNG", 0, 0, GRID.totalWidth, GRID.totalHeight);
-    pdf.save("bullet-journal.pdf");
+  }
+
+  async function renderPageToImage() {
+    const style = window.getComputedStyle(pageInner);
+    const exportWidth = Math.round(Number.parseFloat(style.width)) || GRID.totalWidth;
+    const exportHeight = Math.round(Number.parseFloat(style.height)) || GRID.totalHeight;
+    const canvas = await window.html2canvas(pageInner, {
+      backgroundColor: "#ffffff",
+      scale: PDF_EXPORT_SCALE,
+      width: exportWidth,
+      height: exportHeight,
+      windowWidth: exportWidth,
+      windowHeight: exportHeight,
+      useCORS: true,
+      onclone: (doc) => {
+        const clonePage = doc.getElementById("page-inner");
+        if (clonePage) {
+          // Always capture the un-zoomed canvas for predictable PDF sizing.
+          clonePage.style.transform = "scale(1)";
+          clonePage.style.transformOrigin = "top left";
+        }
+      },
+    });
+    return { imgData: canvas.toDataURL("image/png"), width: exportWidth, height: exportHeight };
   }
 
   function toggleGrid() {
