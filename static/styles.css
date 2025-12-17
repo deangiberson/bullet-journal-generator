@@ -249,18 +249,23 @@ button.small {
 .page-inner {
   width: 816px;
   height: 1056px;
+  padding: 48px;
+  background-color: #fff;
   background:
     linear-gradient(0deg, transparent 23px, var(--grid) 24px),
     linear-gradient(90deg, transparent 23px, var(--grid) 24px);
   background-size: 24px 24px;
-  border: 1px solid var(--grid);
+  background-repeat: repeat;
+  background-origin: content-box;
+  background-clip: content-box;
+  box-shadow: 0 0 0 1px var(--grid);
   position: relative;
   overflow: hidden;
 }
 
 .page-inner.hide-grid {
-  background: transparent;
-  border-color: var(--border);
+  background-image: none;
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 .widget-instance {
@@ -269,10 +274,14 @@ button.small {
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 10px 12px;
-  font-size: 13px;
+  padding: var(--widget-pad, 10px);
+  font-size: 12px;
   outline: none;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.8vw, 6px);
+  overflow: hidden;
 }
 
 .widget-instance:focus-visible {
@@ -282,26 +291,42 @@ button.small {
 
 .widget-instance .remove {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
+  top: 4px;
+  right: 4px;
+  width: var(--widget-control, 24px);
+  height: var(--widget-control, 24px);
   border-radius: 8px;
   border: 1px solid var(--border);
   background: #fff;
   display: grid;
   place-items: center;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .widget-instance .widget-title {
   font-weight: 600;
-  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-size: clamp(9px, 1vw, 11px);
 }
 
 .widget-instance.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-weak);
+}
+
+.widget-instance.no-title .widget-title {
+  display: none;
+}
+
+.widget-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
 }
 
 .widget-ghost {
@@ -321,13 +346,13 @@ button.small {
 
 .code-badge {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 4px;
+  left: 4px;
   padding: 2px 6px;
   border-radius: 6px;
   background: var(--accent-weak);
   color: var(--accent);
-  font-size: 11px;
+  font-size: clamp(8px, 1vw, 11px);
   font-weight: 700;
 }
 
@@ -422,4 +447,345 @@ button.small {
 .toast.fade {
   opacity: 0;
   transition: opacity 0.2s ease;
+}
+
+.widget-current-date .widget-body {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.date-display {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.date-weekday {
+  font-size: clamp(8px, 1vw, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.date-main {
+  font-size: clamp(11px, 1.6vw, 16px);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.date-single {
+  font-size: clamp(8px, 1vw, 11px);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.date-day {
+  color: var(--accent);
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.calendar-header {
+  text-align: center;
+  font-weight: 600;
+  font-size: clamp(10px, 1.2vw, 13px);
+  color: var(--accent);
+}
+
+.calendar-labels,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-labels {
+  font-size: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.calendar-grid {
+  flex: 1;
+  border-top: 1px solid var(--grid);
+  border-left: 1px solid var(--grid);
+}
+
+.calendar-cell {
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  font-size: 8px;
+  text-align: center;
+  padding: 2px 0;
+  color: var(--text);
+}
+
+.calendar-cell.empty {
+  color: transparent;
+}
+
+.calendar.mini .calendar-header {
+  font-size: 10px;
+}
+
+.calendar.mini .calendar-labels,
+.calendar.mini .calendar-cell {
+  font-size: 7px;
+  padding: 1px 0;
+}
+
+.three-months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  height: 100%;
+}
+
+.notes-surface {
+  flex: 1;
+  border-radius: 6px;
+  border: 1px solid var(--grid);
+  background-color: #fff;
+  background-image: radial-gradient(var(--grid) 0.6px, transparent 0);
+  background-size: 8px 8px;
+}
+
+.todo-list,
+.gratitude-list,
+.goal-list,
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.todo-row,
+.gratitude-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.todo-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.todo-line,
+.gratitude-line {
+  flex: 1;
+  height: 10px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.gratitude-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.schedule-row:nth-child(odd) {
+  background: rgba(59, 109, 246, 0.04);
+}
+
+.schedule-time {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.schedule-line {
+  border-bottom: 1px solid var(--grid);
+  height: 8px;
+}
+
+.habit-table {
+  display: grid;
+  grid-template-columns: minmax(54px, 1.2fr) repeat(7, 1fr);
+  gap: 0;
+  border: 1px solid var(--grid);
+  border-right: none;
+  border-bottom: none;
+  font-size: 8px;
+  text-align: center;
+}
+
+.habit-head,
+.habit-label,
+.habit-cell {
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  padding: 2px 4px;
+  min-height: 14px;
+}
+
+.habit-head {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.habit-label {
+  text-align: left;
+  color: var(--text);
+}
+
+.mood-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  flex: 1;
+}
+
+.mood-cell {
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  min-height: 16px;
+  position: relative;
+  font-size: 7px;
+  color: var(--muted);
+}
+
+.mood-cell.empty {
+  border-color: transparent;
+}
+
+.mood-day {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+}
+
+.mood-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+}
+
+.mood-1 {
+  background: #4f7cff;
+}
+
+.mood-2 {
+  background: #22c55e;
+}
+
+.mood-3 {
+  background: #f59e0b;
+}
+
+.mood-4 {
+  background: #ef4444;
+}
+
+.mood-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 8px;
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.goal-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 6px;
+  align-items: center;
+  font-size: 9px;
+}
+
+.goal-label {
+  color: var(--muted);
+}
+
+.goal-bar {
+  height: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-fill {
+  position: absolute;
+  inset: 0 60% 0 0;
+  background: var(--accent-weak);
+}
+
+.pomodoro-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.pomodoro-row {
+  display: flex;
+  gap: 6px;
+}
+
+.pomodoro-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.time-blocks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.time-block {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 24px;
+  padding: 4px 6px;
+  font-size: 9px;
+  color: var(--muted);
+  background: linear-gradient(90deg, var(--accent-weak) 35%, transparent 35%);
+  display: flex;
+  align-items: center;
 }

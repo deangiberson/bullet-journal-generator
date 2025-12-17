@@ -30,6 +30,21 @@
     { id: "three-month-calendar", name: "3-Month Calendar", defaultSize: [8, 5] },
   ];
 
+  const WIDGET_LABELS = {
+    notes: "Notes",
+    todo: "Todo",
+    "daily-schedule": "Schedule",
+    "habit-tracker": "Habits",
+    "mood-tracker": "Mood",
+    "gratitude-log": "Gratitude",
+    "goal-tracker": "Goals",
+    "pomodoro-tracker": "Pomodoro",
+    "time-tracker": "Time Blocks",
+  };
+
+  const TITLELESS_WIDGETS = new Set(["current-date", "month-calendar", "three-month-calendar"]);
+  const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
   const CATEGORIES = [
     { name: "Essentials", ids: ["current-date", "notes", "todo", "daily-schedule"] },
     { name: "Trackers", ids: ["habit-tracker", "mood-tracker", "gratitude-log", "pomodoro-tracker", "time-tracker", "goal-tracker"] },
@@ -76,6 +91,331 @@
 
   function getWidgetDef(id) {
     return WIDGETS.find((w) => w.id === id);
+  }
+
+  function formatHourLabel(hour) {
+    const period = hour >= 12 ? "p" : "a";
+    const normalized = hour % 12 === 0 ? 12 : hour % 12;
+    return `${normalized}${period}`;
+  }
+
+  function getMonthMeta(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const offset = (first.getDay() + 6) % 7;
+    return { year, month, daysInMonth, offset };
+  }
+
+  function buildMonthCalendar(date, variant = "full") {
+    const wrapper = document.createElement("div");
+    wrapper.className = variant === "mini" ? "calendar mini" : "calendar";
+
+    const header = document.createElement("div");
+    header.className = "calendar-header";
+    header.textContent = date.toLocaleDateString("en-US", {
+      month: variant === "mini" ? "short" : "long",
+      year: "numeric",
+    });
+    wrapper.appendChild(header);
+
+    const labels = document.createElement("div");
+    labels.className = "calendar-labels";
+    WEEKDAY_LABELS.forEach((label) => {
+      const cell = document.createElement("div");
+      cell.className = "calendar-label";
+      cell.textContent = label;
+      labels.appendChild(cell);
+    });
+    wrapper.appendChild(labels);
+
+    const grid = document.createElement("div");
+    grid.className = "calendar-grid";
+    const { daysInMonth, offset } = getMonthMeta(date);
+    const totalCells = 42;
+    for (let i = 0; i < totalCells; i += 1) {
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell";
+      const day = i - offset + 1;
+      if (day < 1 || day > daysInMonth) {
+        cell.classList.add("empty");
+      } else {
+        cell.textContent = String(day);
+      }
+      grid.appendChild(cell);
+    }
+    wrapper.appendChild(grid);
+    return wrapper;
+  }
+
+  function buildCurrentDate(widget) {
+    const body = document.createElement("div");
+    body.className = "date-display";
+    const now = new Date();
+    const weekday = now.toLocaleDateString("en-US", { weekday: "short" });
+    const month = now.toLocaleDateString("en-US", { month: "short" });
+    const day = now.getDate();
+    const year = now.getFullYear();
+
+    if (widget.height <= 1) {
+      const single = document.createElement("div");
+      single.className = "date-single";
+      single.textContent = `${weekday} ${month} ${day}, ${year}`;
+      body.appendChild(single);
+      return body;
+    }
+
+    const weekdayEl = document.createElement("div");
+    weekdayEl.className = "date-weekday";
+    weekdayEl.textContent = weekday;
+
+    const main = document.createElement("div");
+    main.className = "date-main";
+    const monthSpan = document.createElement("span");
+    monthSpan.textContent = month;
+    const daySpan = document.createElement("span");
+    daySpan.className = "date-day";
+    daySpan.textContent = String(day);
+    const yearSpan = document.createElement("span");
+    yearSpan.textContent = String(year);
+    main.append(monthSpan, " ", daySpan, ", ", yearSpan);
+
+    body.append(weekdayEl, main);
+    return body;
+  }
+
+  function buildNotesSurface() {
+    const surface = document.createElement("div");
+    surface.className = "notes-surface";
+    return surface;
+  }
+
+  function buildTodoList(lineCount) {
+    const list = document.createElement("div");
+    list.className = "todo-list";
+    for (let i = 0; i < lineCount; i += 1) {
+      const row = document.createElement("div");
+      row.className = "todo-row";
+      const box = document.createElement("span");
+      box.className = "todo-box";
+      const line = document.createElement("span");
+      line.className = "todo-line";
+      row.append(box, line);
+      list.appendChild(row);
+    }
+    return list;
+  }
+
+  function buildSchedule(lines) {
+    const schedule = document.createElement("div");
+    schedule.className = "schedule-list";
+    const startHour = 8;
+    for (let i = 0; i < lines; i += 1) {
+      const hour = startHour + i;
+      const row = document.createElement("div");
+      row.className = "schedule-row";
+      const time = document.createElement("span");
+      time.className = "schedule-time";
+      time.textContent = formatHourLabel(hour);
+      const slot = document.createElement("span");
+      slot.className = "schedule-line";
+      row.append(time, slot);
+      schedule.appendChild(row);
+    }
+    return schedule;
+  }
+
+  function buildHabitTracker(rows) {
+    const table = document.createElement("div");
+    table.className = "habit-table";
+    const empty = document.createElement("div");
+    empty.className = "habit-head";
+    table.appendChild(empty);
+    WEEKDAY_LABELS.forEach((label) => {
+      const head = document.createElement("div");
+      head.className = "habit-head";
+      head.textContent = label;
+      table.appendChild(head);
+    });
+    for (let i = 0; i < rows; i += 1) {
+      const label = document.createElement("div");
+      label.className = "habit-label";
+      label.textContent = `Habit ${i + 1}`;
+      table.appendChild(label);
+      for (let j = 0; j < 7; j += 1) {
+        const cell = document.createElement("div");
+        cell.className = "habit-cell";
+        table.appendChild(cell);
+      }
+    }
+    return table;
+  }
+
+  function buildMoodTracker() {
+    const container = document.createElement("div");
+    container.className = "mood-tracker";
+    const grid = document.createElement("div");
+    grid.className = "mood-grid";
+    const { daysInMonth, offset } = getMonthMeta(new Date());
+    const totalCells = 42;
+    for (let i = 0; i < totalCells; i += 1) {
+      const day = i - offset + 1;
+      const cell = document.createElement("div");
+      cell.className = "mood-cell";
+      if (day < 1 || day > daysInMonth) {
+        cell.classList.add("empty");
+      } else {
+        const number = document.createElement("span");
+        number.className = "mood-day";
+        number.textContent = String(day);
+        const dot = document.createElement("span");
+        dot.className = `mood-dot mood-${(day % 4) + 1}`;
+        cell.append(number, dot);
+      }
+      grid.appendChild(cell);
+    }
+
+    const legend = document.createElement("div");
+    legend.className = "mood-legend";
+    [
+      { label: "Great", mood: "mood-1" },
+      { label: "Good", mood: "mood-2" },
+      { label: "Okay", mood: "mood-3" },
+      { label: "Low", mood: "mood-4" },
+    ].forEach((item) => {
+      const entry = document.createElement("div");
+      entry.className = "legend-item";
+      const swatch = document.createElement("span");
+      swatch.className = `legend-dot ${item.mood}`;
+      const text = document.createElement("span");
+      text.textContent = item.label;
+      entry.append(swatch, text);
+      legend.appendChild(entry);
+    });
+
+    container.append(grid, legend);
+    return container;
+  }
+
+  function buildGratitudeList(lineCount) {
+    const list = document.createElement("div");
+    list.className = "gratitude-list";
+    for (let i = 0; i < lineCount; i += 1) {
+      const row = document.createElement("div");
+      row.className = "gratitude-row";
+      const bullet = document.createElement("span");
+      bullet.className = "gratitude-bullet";
+      const line = document.createElement("span");
+      line.className = "gratitude-line";
+      row.append(bullet, line);
+      list.appendChild(row);
+    }
+    return list;
+  }
+
+  function buildGoalList(count) {
+    const list = document.createElement("div");
+    list.className = "goal-list";
+    for (let i = 0; i < count; i += 1) {
+      const row = document.createElement("div");
+      row.className = "goal-row";
+      const label = document.createElement("span");
+      label.className = "goal-label";
+      label.textContent = `Goal ${i + 1}`;
+      const bar = document.createElement("span");
+      bar.className = "goal-bar";
+      const fill = document.createElement("span");
+      fill.className = "goal-fill";
+      bar.appendChild(fill);
+      row.append(label, bar);
+      list.appendChild(row);
+    }
+    return list;
+  }
+
+  function buildPomodoroTracker() {
+    const container = document.createElement("div");
+    container.className = "pomodoro-sets";
+    for (let i = 0; i < 2; i += 1) {
+      const row = document.createElement("div");
+      row.className = "pomodoro-row";
+      for (let j = 0; j < 4; j += 1) {
+        const circle = document.createElement("span");
+        circle.className = "pomodoro-dot";
+        row.appendChild(circle);
+      }
+      container.appendChild(row);
+    }
+    return container;
+  }
+
+  function buildTimeBlocks(count) {
+    const container = document.createElement("div");
+    container.className = "time-blocks";
+    for (let i = 0; i < count; i += 1) {
+      const block = document.createElement("div");
+      block.className = "time-block";
+      const label = document.createElement("span");
+      label.className = "time-label";
+      label.textContent = `Block ${i + 1}`;
+      block.appendChild(label);
+      container.appendChild(block);
+    }
+    return container;
+  }
+
+  function fillWidgetBody(body, widget) {
+    body.replaceChildren();
+    switch (widget.type) {
+      case "current-date":
+        body.appendChild(buildCurrentDate(widget));
+        break;
+      case "month-calendar":
+        body.appendChild(buildMonthCalendar(new Date(), "full"));
+        break;
+      case "three-month-calendar": {
+        const container = document.createElement("div");
+        container.className = "three-months";
+        const base = new Date();
+        for (let i = 0; i < 3; i += 1) {
+          const monthDate = new Date(base.getFullYear(), base.getMonth() + i, 1);
+          container.appendChild(buildMonthCalendar(monthDate, "mini"));
+        }
+        body.appendChild(container);
+        break;
+      }
+      case "notes":
+        body.appendChild(buildNotesSurface());
+        break;
+      case "todo":
+        body.appendChild(buildTodoList(widget.height <= 2 ? 5 : 8));
+        break;
+      case "daily-schedule":
+        body.appendChild(buildSchedule(widget.height <= 3 ? 7 : 11));
+        break;
+      case "habit-tracker":
+        body.appendChild(buildHabitTracker(widget.height <= 3 ? 5 : 7));
+        break;
+      case "mood-tracker":
+        body.appendChild(buildMoodTracker());
+        break;
+      case "gratitude-log":
+        body.appendChild(buildGratitudeList(widget.height <= 2 ? 5 : 8));
+        break;
+      case "goal-tracker":
+        body.appendChild(buildGoalList(widget.height <= 2 ? 3 : 5));
+        break;
+      case "pomodoro-tracker":
+        body.appendChild(buildPomodoroTracker());
+        break;
+      case "time-tracker":
+        body.appendChild(buildTimeBlocks(widget.width <= 5 ? 4 : 5));
+        break;
+      default:
+        body.textContent = "";
+        break;
+    }
   }
 
   function codeForIndex(index) {
@@ -162,12 +502,31 @@
     el.style.left = `${left}px`;
     el.style.width = `${width}px`;
     el.style.height = `${height}px`;
+    el.style.setProperty("--widget-cols", widget.width);
+    el.style.setProperty("--widget-rows", widget.height);
+    const widgetPad = widget.height <= 1 ? 4 : widget.height <= 2 ? 6 : 8;
+    const controlSize = widget.height <= 1 ? 16 : widget.height <= 2 ? 18 : 22;
+    el.style.setProperty("--widget-pad", `${widgetPad}px`);
+    el.style.setProperty("--widget-control", `${controlSize}px`);
 
     el.dataset.widgetId = widget.id;
     el.dataset.widgetType = widget.type;
-    el.querySelector(".widget-title").textContent = def?.name || widget.type;
+    el.classList.add(`widget-${widget.type}`);
+    const title = el.querySelector(".widget-title");
+    const label = WIDGET_LABELS[widget.type] || def?.name || widget.type;
+    if (TITLELESS_WIDGETS.has(widget.type)) {
+      el.classList.add("no-title");
+      title.textContent = "";
+    } else {
+      title.textContent = label;
+    }
     const badge = el.querySelector(".code-badge");
     badge.textContent = code || "";
+
+    const body = el.querySelector(".widget-body");
+    if (body) {
+      fillWidgetBody(body, widget);
+    }
 
     const remove = el.querySelector(".remove");
     remove.addEventListener("click", (e) => {
