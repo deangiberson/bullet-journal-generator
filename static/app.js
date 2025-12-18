@@ -50,6 +50,7 @@
     { name: "Trackers", ids: ["habit-tracker", "mood-tracker", "gratitude-log", "pomodoro-tracker", "time-tracker", "goal-tracker"] },
     { name: "Calendars", ids: ["month-calendar", "three-month-calendar"] },
   ];
+  const PALETTE_WIDGET_IDS = Array.from(new Set(CATEGORIES.flatMap((c) => c.ids)));
 
   const STORAGE_KEY = "bjg-layout-v1";
   const pageInner = document.getElementById("page-inner");
@@ -433,24 +434,40 @@
     return alphabet[first - 1] + alphabet[second];
   }
 
+  function paletteCodeForIndex(index) {
+    return `p${codeForIndex(index)}`;
+  }
+
   function buildCodeMap() {
     paletteCodes.clear();
-    const map = [];
+    const usedCodes = new Set();
+    const paletteEntries = [];
+    // Palette codes are prefixed so they stay stable regardless of how many widgets are on the canvas.
+    PALETTE_WIDGET_IDS.forEach((id, idx) => {
+      const code = paletteCodeForIndex(idx);
+      paletteCodes.set(id, code);
+      usedCodes.add(code);
+      paletteEntries.push({ code, kind: "palette", widgetId: id });
+    });
+
+    const existingEntries = [];
     const widgetsSorted = [...state.widgets].sort((a, b) => {
       if (a.row === b.row) return a.col - b.col;
       return a.row - b.row;
     });
-    widgetsSorted.forEach((widget, idx) => {
-      map.push({ code: codeForIndex(idx), kind: "existing", id: widget.id });
+    let nextIndex = 0;
+    widgetsSorted.forEach((widget) => {
+      let code = codeForIndex(nextIndex);
+      while (usedCodes.has(code)) {
+        nextIndex += 1;
+        code = codeForIndex(nextIndex);
+      }
+      usedCodes.add(code);
+      existingEntries.push({ code, kind: "existing", id: widget.id });
+      nextIndex += 1;
     });
-    // Palette codes follow to avoid collisions.
-    let offset = map.length;
-    CATEGORIES.flatMap((c) => c.ids).forEach((id, idx) => {
-      const code = codeForIndex(offset + idx);
-      paletteCodes.set(id, code);
-      map.push({ code, kind: "palette", widgetId: id });
-    });
-    state.codeMap = map;
+
+    state.codeMap = [...existingEntries, ...paletteEntries];
   }
 
   function findCodeEntry(code) {
@@ -1136,7 +1153,12 @@
     if (target.kind === "existing") {
       state.selectedId = target.id;
       renderSelection();
-      closePalette();
+      state.codeBuffer = "";
+      if (state.selectMode) {
+        commandInput?.focus();
+      } else {
+        closePalette();
+      }
       return;
     }
     if (target.kind === "palette") {
