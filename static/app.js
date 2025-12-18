@@ -746,8 +746,73 @@
     persist();
   }
 
+  function buildLayoutPayload(widgets = state.widgets) {
+    return {
+      widgets: widgets.map((w) => ({
+        id: w.id,
+        type: w.type,
+        row: w.row,
+        col: w.col,
+        width: w.width,
+        height: w.height,
+      })),
+    };
+  }
+
+  function validateLayoutPayload(payload) {
+    if (!payload || typeof payload !== "object") {
+      return { ok: false, error: "Layout JSON must be an object." };
+    }
+    if (!Array.isArray(payload.widgets)) {
+      return { ok: false, error: "Layout JSON must include a widgets array." };
+    }
+
+    const seenIds = new Set();
+    const widgets = [];
+    for (let i = 0; i < payload.widgets.length; i += 1) {
+      const raw = payload.widgets[i];
+      if (!raw || typeof raw !== "object") {
+        return { ok: false, error: `Widget #${i + 1} is not an object.` };
+      }
+      const { id, type, row, col, width, height } = raw;
+      if (!id || typeof id !== "string") {
+        return { ok: false, error: "Each widget must include an id string." };
+      }
+      if (seenIds.has(id)) {
+        return { ok: false, error: `Duplicate widget id: ${id}` };
+      }
+      seenIds.add(id);
+      if (!type || typeof type !== "string") {
+        return { ok: false, error: `Widget ${id} is missing a type.` };
+      }
+      const def = getWidgetDef(type);
+      if (!def) {
+        return { ok: false, error: `Unknown widget type: ${type}` };
+      }
+      if (![row, col, width, height].every(Number.isInteger)) {
+        return { ok: false, error: `Widget ${id} has non-integer position or size.` };
+      }
+      if (width <= 0 || height <= 0) {
+        return { ok: false, error: `Widget ${id} must have a positive size.` };
+      }
+      const [defWidth, defHeight] = def.defaultSize;
+      if (width !== defWidth || height !== defHeight) {
+        return { ok: false, error: `Widget ${id} size is invalid for ${type}.` };
+      }
+      if (!fitsWithin(row, col, width, height)) {
+        return { ok: false, error: `Widget ${id} placement is out of bounds.` };
+      }
+      const collision = widgets.some((existing) => overlaps(existing, row, col, width, height));
+      if (collision) {
+        return { ok: false, error: "Widgets overlap in the provided layout." };
+      }
+      widgets.push({ id, type, row, col, width, height });
+    }
+    return { ok: true, widgets };
+  }
+
   function persist() {
-    const payload = { widgets: state.widgets };
+    const payload = buildLayoutPayload();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
 
@@ -756,17 +821,26 @@
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.widgets)) {
-        state.widgets = parsed.widgets.map((w) => ({ ...w }));
+      const validation = validateLayoutPayload(parsed);
+      if (!validation.ok) {
+        showToast(validation.error);
+        return;
       }
+      state.widgets = validation.widgets;
     } catch (err) {
       showToast("Stored layout could not be loaded.");
     }
   }
 
   function exportLayout() {
-    const payload = JSON.stringify({ widgets: state.widgets }, null, 2);
-    const blob = new Blob([payload], { type: "application/json" });
+    const payload = buildLayoutPayload();
+    const validation = validateLayoutPayload(payload);
+    if (!validation.ok) {
+      showToast(validation.error || "Layout could not be exported.");
+      return;
+    }
+    const payloadJson = JSON.stringify({ widgets: validation.widgets }, null, 2);
+    const blob = new Blob([payloadJson], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -785,14 +859,17 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
+        const text = typeof reader.result === "string" ? reader.result : "";
         try {
-          const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed.widgets)) {
-            showToast("Invalid JSON: missing widgets array.");
+          const parsed = JSON.parse(text);
+          const validation = validateLayoutPayload(parsed);
+          if (!validation.ok) {
+            showToast(validation.error);
             return;
           }
           const before = cloneWidgets();
-          state.widgets = parsed.widgets.map((w) => ({ ...w }));
+          state.widgets = validation.widgets;
+          state.selectedId = null;
           recordHistory(before);
           persist();
           render();
