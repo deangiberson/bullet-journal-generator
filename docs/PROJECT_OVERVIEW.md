@@ -59,7 +59,7 @@
 
 - Keyboard-first command palette triggered by `/`; `Esc` cancels any mode, `Enter` confirms, `Tab` cycles normally.
 - Selection mode: press `s` after `/` to enter select; one/two-letter codes shown in the top-left of selectable items (new and existing). Codes stay stable relative to on-screen order/positions, scanning left-to-right, top-to-bottom by grid lines.
-- Placement: after picking a widget, choose row then column; today this is prompted when using keyboard codes. Snap enforced; blocked placements show an error toast and do not change layout.
+- Placement: after picking a widget, choose row then column via inline palette inputs (no prompts). Snap enforced; blocked placements show an error toast and do not change layout.
 - Removal: select an existing widget via codes and press `Delete` to remove.
 - Error handling: invalid row/col or blocked placement shows a toast with the error and returns to root (idle) mode.
 - Focus and hints: palette and widget codes remain keyboard-addressable; clear focus states after each action; hints persist so shortcuts are discoverable.

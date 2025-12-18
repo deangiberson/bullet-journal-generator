@@ -444,6 +444,66 @@ button.small {
   flex-wrap: wrap;
 }
 
+.placement-form {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.placement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.placement-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.placement-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.code-pill {
+  background: var(--border);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.placement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.placement-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.placement-grid input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
 .toast.fade {
   opacity: 0;
   transition: opacity 0.2s ease;

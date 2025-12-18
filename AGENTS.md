@@ -21,7 +21,7 @@
 
 ## Product Notes
 - Core experience: grid-based canvas with fixed-size widgets (think iPhone widget variants), hard snap, and blocked drops if a widget does not fit; flat plane with no z-order. Drag from the palette or move existing widgets shows a snap preview ghost (blue for valid, red for blocked) before dropping.
-- Accessible by simplicity: minimal controls, clear focus/keyboard paths, simple add/remove (big X), and undo/redo for layout edits. Keyboard palette opens with “/”; select with “s”; codes scan left→right/top→bottom; row/col placement is prompted today.
+- Accessible by simplicity: minimal controls, clear focus/keyboard paths, simple add/remove (big X), and undo/redo for layout edits. Keyboard palette opens with “/”; select with “s”; codes scan left→right/top→bottom; row/col placement is collected inline in the palette (no prompts).
 - Reusable widgets (e.g., text, checklist, habit tracker), drag-and-drop placement, and page layout persistence for printable templates (widgets are decorative).
 - Output goal: generate a PDF of the composed page(s) that matches the on-screen layout (parity preferred; relax if needed). Rendering/export choice: HTML box model + html2canvas + jsPDF with embedded fonts and fixed sizing (scripts loaded in the page).
 - Client-heavy by default for rendering and PDF; server only if later proven necessary.

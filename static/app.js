@@ -57,6 +57,12 @@
   const toastContainer = document.getElementById("toast-container");
   const commandPalette = document.getElementById("command-palette");
   const commandInput = document.getElementById("command-input");
+  const placementForm = document.getElementById("placement-form");
+  const placementRowInput = document.getElementById("placement-row");
+  const placementColInput = document.getElementById("placement-col");
+  const placementWidgetName = document.getElementById("placement-widget-name");
+  const placementWidgetCode = document.getElementById("placement-widget-code");
+  const placementFormFields = document.getElementById("placement-form-fields");
   let ghostEl = null;
 
   const fontsReady = loadInterFonts();
@@ -74,6 +80,7 @@
     codeBuffer: "",
     codeMap: [],
     drag: null,
+    pendingPlacement: null,
   };
 
   function loadInterFonts() {
@@ -444,6 +451,12 @@
       map.push({ code, kind: "palette", widgetId: id });
     });
     state.codeMap = map;
+  }
+
+  function findCodeEntry(code) {
+    const normalized = code?.toLowerCase?.();
+    if (!normalized) return null;
+    return state.codeMap.find((entry) => entry.code === normalized) || null;
   }
 
   function renderPalette(filter = "") {
@@ -900,10 +913,32 @@
     setTimeout(() => toast.remove(), 3200);
   }
 
+  function resetPlacementForm() {
+    if (placementRowInput) placementRowInput.value = "";
+    if (placementColInput) placementColInput.value = "";
+  }
+
+  function hidePlacementForm() {
+    state.pendingPlacement = null;
+    if (placementForm) placementForm.hidden = true;
+    resetPlacementForm();
+  }
+
+  function startPlacement(target) {
+    state.pendingPlacement = target;
+    const def = getWidgetDef(target.widgetId);
+    if (placementWidgetName) placementWidgetName.textContent = def?.name || target.widgetId;
+    if (placementWidgetCode) placementWidgetCode.textContent = target.code;
+    resetPlacementForm();
+    if (placementForm) placementForm.hidden = false;
+    placementRowInput?.focus();
+  }
+
   function openPalette() {
     state.paletteOpen = true;
     state.selectMode = false;
     state.codeBuffer = "";
+    hidePlacementForm();
     commandPalette.hidden = false;
     commandInput.value = "";
     commandInput.focus();
@@ -913,6 +948,7 @@
     state.paletteOpen = false;
     state.selectMode = false;
     state.codeBuffer = "";
+    hidePlacementForm();
     commandPalette.hidden = true;
     commandInput.value = "";
   }
@@ -946,24 +982,39 @@
       } else if (parts[0] === "select" && parts[1]) {
         handleCodeSelection(parts[1].toLowerCase());
       } else {
-        showToast("Commands: add <code> <row> <col> · select <code>");
+        const entry = findCodeEntry(value);
+        if (entry) {
+          handleCodeSelection(entry.code);
+        } else {
+          showToast("Commands: add <code> <row> <col> · select <code>");
+        }
       }
       return;
     }
     if (event.key.toLowerCase() === "s") {
       state.selectMode = true;
       state.codeBuffer = "";
-      showToast("Select mode: type widget code, then row and column for placement.");
+      showToast("Select mode: type widget code, then enter row and column in the palette.");
       return;
     }
     if (state.selectMode && /^[a-z]$/i.test(event.key)) {
       state.codeBuffer += event.key.toLowerCase();
-      if (state.codeBuffer.length >= 2) {
-        const code = state.codeBuffer;
+      const buffer = state.codeBuffer;
+      const exact = findCodeEntry(buffer);
+      const hasLonger = state.codeMap.some((entry) => entry.code.startsWith(buffer) && entry.code.length > buffer.length);
+      if (exact && (!hasLonger || buffer.length >= 2)) {
         state.codeBuffer = "";
-        handleCodeSelection(code);
+        handleCodeSelection(buffer);
+      } else if (buffer.length >= 2 && !exact) {
+        state.codeBuffer = "";
+        showToast("Unknown code.");
       }
       event.preventDefault();
+    }
+    if (state.selectMode && event.key === "Enter" && state.codeBuffer) {
+      const code = state.codeBuffer;
+      state.codeBuffer = "";
+      handleCodeSelection(code);
     }
     if (state.selectMode && event.key === "Delete" && state.selectedId) {
       removeWidget(state.selectedId);
@@ -1089,26 +1140,18 @@
       return;
     }
     if (target.kind === "palette") {
-      let row = providedRow;
-      let col = providedCol;
-      if (!Number.isInteger(row) || !Number.isInteger(col)) {
-        const rowInput = prompt("Row (1-40):");
-        if (rowInput === null) return;
-        row = Number(rowInput) - 1;
-        const colInput = prompt("Column (1-30):");
-        if (colInput === null) return;
-        col = Number(colInput) - 1;
-      }
-      if (Number.isNaN(row) || Number.isNaN(col)) {
-        showToast("Row/column must be numbers.");
+      if (Number.isInteger(providedRow) && Number.isInteger(providedCol)) {
+        if (providedRow < 0 || providedCol < 0 || providedRow >= GRID.rows || providedCol >= GRID.cols) {
+          showToast("Row/column out of bounds.");
+          return;
+        }
+        const placed = addWidget(target.widgetId, providedRow, providedCol);
+        if (placed) closePalette();
         return;
       }
-      if (row < 0 || col < 0 || row >= GRID.rows || col >= GRID.cols) {
-        showToast("Row/column out of bounds.");
-        return;
-      }
-      const placed = addWidget(target.widgetId, row, col);
-      if (placed) closePalette();
+      state.selectMode = false;
+      state.codeBuffer = "";
+      startPlacement({ ...target, code });
     }
   }
 
@@ -1150,6 +1193,29 @@
         offsetX: def.defaultSize[0] * GRID.cell * 0.5,
         offsetY: def.defaultSize[1] * GRID.cell * 0.5,
       });
+    });
+
+    placementFormFields?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!state.pendingPlacement) return;
+      const row = Number(placementRowInput.value) - 1;
+      const col = Number(placementColInput.value) - 1;
+      if (!Number.isFinite(row) || !Number.isFinite(col)) {
+        showToast("Row/column must be numbers.");
+        placementRowInput?.focus();
+        return;
+      }
+      if (row < 0 || col < 0 || row >= GRID.rows || col >= GRID.cols) {
+        showToast("Row/column out of bounds.");
+        return;
+      }
+      const placed = addWidget(state.pendingPlacement.widgetId, row, col);
+      if (placed) closePalette();
+    });
+
+    document.querySelector('[data-action="placement-cancel"]')?.addEventListener("click", () => {
+      hidePlacementForm();
+      commandInput?.focus();
     });
   }
 

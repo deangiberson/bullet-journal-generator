@@ -2,7 +2,6 @@
 
 - Frontend polish
   - Render real widget visuals per `docs/WIDGET_SPEC_TODO.md` (not just titles); ensure each variant uses grid-based sizing only.
-  - Remove prompt-based row/col for keyboard placement; use inline inputs or palette-driven selection to stay within accessibility plan.
   - Stabilize code badge assignment for palette/existing items and keep hints visible during keyboard flows.
   - Add schema validation for JSON import/export; surface toast on schema/parse error without mutating state.
   - Improve PDF export fidelity: embed chosen font, lock scaling, and sanity-check html2canvas/jsPDF output against the 816×1056 canvas.
