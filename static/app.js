@@ -56,6 +56,7 @@
   const pageInner = document.getElementById("page-inner");
   const categoriesEl = document.getElementById("widget-categories");
   const toastContainer = document.getElementById("toast-container");
+  const statusLine = document.getElementById("status-line");
   let ghostEl = null;
 
   const fontsReady = loadInterFonts();
@@ -873,9 +874,17 @@
     return { imgData: canvas.toDataURL("image/png"), width: exportWidth, height: exportHeight };
   }
 
+  function updateStatusLine() {
+    if (statusLine) {
+      const gridStatus = state.showGrid ? "Grid on" : "Grid off";
+      statusLine.textContent = `US Letter · Portrait · ${gridStatus}`;
+    }
+  }
+
   function toggleGrid() {
     state.showGrid = !state.showGrid;
     pageInner.classList.toggle("hide-grid", !state.showGrid);
+    updateStatusLine();
   }
 
   function setZoom(value) {
@@ -1090,6 +1099,7 @@
     hydrate();
     render();
     setZoom(state.zoom);
+    updateStatusLine();
     wireEvents();
   }
 
