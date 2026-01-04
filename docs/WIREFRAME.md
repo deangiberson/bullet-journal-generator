@@ -13,7 +13,7 @@
 │ │   · Essentials: Current Date, Notes, Todo, Daily Schedule   │
 │ │   · Trackers: Habit, Mood, Gratitude, Pomodoro, Time        │
 │ │   · Calendars: Month, 3-Month                               │
-│ └─ Add control per item (keyboard focusable; Enter/Space adds)│
+│ └─ Add control per item (clickable)                           │
 ├───────────────────────────────────────────────────────────────┤
 │ Main Area: Page Canvas (US Letter, portrait, grid visible)    │
 │ ┌───────────────────────────────────────────────────────────┐ │
@@ -24,12 +24,12 @@
 │ │   ┌─────────────┐                                         │ │
 │ │   │ Notes       │  ⓧ Remove (big X)                       │ │
 │ │   └─────────────┘                                         │ │
-│ │  Keyboard: tab/arrow to focus widgets; Delete activates X │ │
+│ │  Pointer-first interactions; Delete available via visible X│ │
 │ └───────────────────────────────────────────────────────────┘ │
 ├───────────────────────────────────────────────────────────────┤
 │ Bottom Bar (optional)                                        │
 │ ├─ Grid controls: [Show/Hide Grid] [Zoom +/–]                │
-│ └─ Hints: “Tab to navigate widgets. Space to place. Del to remove.” │
+│ └─ Hints: “Drag widgets from the palette. Click X to remove.”│
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,4 +38,4 @@
 - Hard snap to grid; rejected drop shows feedback and leaves layout unchanged.
 - Undo/redo for add/remove moves.
 - Import/Export: JSON of the layout model; PDF export should match canvas layout.
-- Accessibility by simplicity: all controls reachable via keyboard; clear focus states; removal via visible “X”; predictable focus after actions.
+- Accessibility by simplicity: straightforward pointer interactions; removal via visible “X”; predictable layout behavior after actions.

@@ -222,12 +222,6 @@ button.small {
   font-weight: 600;
 }
 
-.widget-item .code {
-  color: var(--muted);
-  font-size: 12px;
-  margin-right: 6px;
-}
-
 .canvas {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -344,18 +338,6 @@ button.small {
   background: rgba(209, 67, 67, 0.08);
 }
 
-.code-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: var(--accent-weak);
-  color: var(--accent);
-  font-size: clamp(8px, 1vw, 11px);
-  font-weight: 700;
-}
-
 .page-footer {
   color: var(--muted);
   font-size: 12px;
@@ -388,120 +370,6 @@ button.small {
   font-size: 13px;
   min-width: 220px;
   border-left: 4px solid var(--accent);
-}
-
-#command-palette {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  display: grid;
-  place-items: center;
-  z-index: 50;
-}
-
-.command-shell {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  width: min(720px, 90vw);
-  box-shadow: var(--shadow);
-}
-
-#command-palette[hidden] {
-  display: none;
-}
-
-.command-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.command-title {
-  font-weight: 700;
-}
-
-.command-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#command-input {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  font-size: 14px;
-}
-
-.command-hints {
-  color: var(--muted);
-  font-size: 12px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.placement-form {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--panel);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.placement-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.placement-title {
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.placement-subtitle {
-  color: var(--muted);
-  font-size: 12px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.code-pill {
-  background: var(--border);
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.02em;
-}
-
-.placement-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
-  align-items: end;
-}
-
-.placement-grid label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.placement-grid input {
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 14px;
 }
 
 .toast.fade {

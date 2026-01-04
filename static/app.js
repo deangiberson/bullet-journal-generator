@@ -16,18 +16,18 @@
 
   const PDF_EXPORT_SCALE = 2;
   const WIDGETS = [
-    { id: "current-date", name: "Current Date", defaultSize: [3, 1] },
-    { id: "month-calendar", name: "Month Calendar", defaultSize: [6, 4] },
-    { id: "notes", name: "Notes", defaultSize: [4, 2] },
-    { id: "todo", name: "Todo", defaultSize: [4, 2] },
-    { id: "daily-schedule", name: "Daily Schedule", defaultSize: [5, 3] },
-    { id: "habit-tracker", name: "Habit Tracker", defaultSize: [6, 3] },
-    { id: "mood-tracker", name: "Mood Tracker", defaultSize: [4, 3] },
-    { id: "gratitude-log", name: "Gratitude Log", defaultSize: [4, 2] },
-    { id: "goal-tracker", name: "Goal Tracker", defaultSize: [4, 2] },
-    { id: "pomodoro-tracker", name: "Pomodoro Tracker", defaultSize: [4, 2] },
-    { id: "time-tracker", name: "Time Tracker", defaultSize: [5, 2] },
-    { id: "three-month-calendar", name: "3-Month Calendar", defaultSize: [8, 5] },
+    { id: "current-date", name: "Current Date", defaultSize: [6, 2] },
+    { id: "month-calendar", name: "Month Calendar", defaultSize: [14, 8] },
+    { id: "three-month-calendar", name: "3-Month Calendar", defaultSize: [22, 8] },
+    { id: "notes", name: "Notes", defaultSize: [10, 8] },
+    { id: "todo", name: "Todo", defaultSize: [9, 8] },
+    { id: "daily-schedule", name: "Daily Schedule", defaultSize: [12, 12] },
+    { id: "habit-tracker", name: "Habit Tracker", defaultSize: [14, 6] },
+    { id: "mood-tracker", name: "Mood Tracker", defaultSize: [10, 8] },
+    { id: "gratitude-log", name: "Gratitude Log", defaultSize: [8, 5] },
+    { id: "goal-tracker", name: "Goal Tracker", defaultSize: [9, 6] },
+    { id: "pomodoro-tracker", name: "Pomodoro Tracker", defaultSize: [8, 4] },
+    { id: "time-tracker", name: "Time Tracker", defaultSize: [12, 5] },
   ];
 
   const WIDGET_LABELS = {
@@ -56,19 +56,10 @@
   const pageInner = document.getElementById("page-inner");
   const categoriesEl = document.getElementById("widget-categories");
   const toastContainer = document.getElementById("toast-container");
-  const commandPalette = document.getElementById("command-palette");
-  const commandInput = document.getElementById("command-input");
-  const placementForm = document.getElementById("placement-form");
-  const placementRowInput = document.getElementById("placement-row");
-  const placementColInput = document.getElementById("placement-col");
-  const placementWidgetName = document.getElementById("placement-widget-name");
-  const placementWidgetCode = document.getElementById("placement-widget-code");
-  const placementFormFields = document.getElementById("placement-form-fields");
   let ghostEl = null;
 
   const fontsReady = loadInterFonts();
 
-  const paletteCodes = new Map(); // widget id -> code
   const state = {
     widgets: [],
     history: [],
@@ -76,12 +67,7 @@
     showGrid: true,
     zoom: 1,
     selectedId: null,
-    paletteOpen: false,
-    selectMode: false,
-    codeBuffer: "",
-    codeMap: [],
     drag: null,
-    pendingPlacement: null,
   };
 
   function loadInterFonts() {
@@ -166,7 +152,7 @@
     const day = now.getDate();
     const year = now.getFullYear();
 
-    if (widget.height <= 1) {
+    if (widget.height <= 2) {
       const single = document.createElement("div");
       single.className = "date-single";
       single.textContent = `${weekday} ${month} ${day}, ${year}`;
@@ -396,84 +382,42 @@
       case "notes":
         body.appendChild(buildNotesSurface());
         break;
-      case "todo":
-        body.appendChild(buildTodoList(widget.height <= 2 ? 5 : 8));
+      case "todo": {
+        const lines = widget.height <= 8 ? 7 : 11;
+        body.appendChild(buildTodoList(lines));
         break;
+      }
       case "daily-schedule":
-        body.appendChild(buildSchedule(widget.height <= 3 ? 7 : 11));
+        body.appendChild(buildSchedule(widget.height <= 12 ? 11 : 14));
         break;
-      case "habit-tracker":
-        body.appendChild(buildHabitTracker(widget.height <= 3 ? 5 : 7));
+      case "habit-tracker": {
+        const rows = widget.height <= 6 ? 5 : 8;
+        body.appendChild(buildHabitTracker(rows));
         break;
+      }
       case "mood-tracker":
         body.appendChild(buildMoodTracker());
         break;
       case "gratitude-log":
-        body.appendChild(buildGratitudeList(widget.height <= 2 ? 5 : 8));
+        body.appendChild(buildGratitudeList(widget.height <= 5 ? 5 : 9));
         break;
-      case "goal-tracker":
-        body.appendChild(buildGoalList(widget.height <= 2 ? 3 : 5));
+      case "goal-tracker": {
+        const goals = widget.height <= 6 ? 5 : 6;
+        body.appendChild(buildGoalList(goals));
         break;
+      }
       case "pomodoro-tracker":
         body.appendChild(buildPomodoroTracker());
         break;
-      case "time-tracker":
-        body.appendChild(buildTimeBlocks(widget.width <= 5 ? 4 : 5));
+      case "time-tracker": {
+        const blocks = widget.width <= 12 ? 4 : 5;
+        body.appendChild(buildTimeBlocks(blocks));
         break;
+      }
       default:
         body.textContent = "";
         break;
     }
-  }
-
-  function codeForIndex(index) {
-    const alphabet = "abcdefghijklmnopqrstuvwxyz";
-    const first = Math.floor(index / alphabet.length);
-    const second = index % alphabet.length;
-    if (first === 0) return alphabet[second];
-    return alphabet[first - 1] + alphabet[second];
-  }
-
-  function paletteCodeForIndex(index) {
-    return `p${codeForIndex(index)}`;
-  }
-
-  function buildCodeMap() {
-    paletteCodes.clear();
-    const usedCodes = new Set();
-    const paletteEntries = [];
-    // Palette codes are prefixed so they stay stable regardless of how many widgets are on the canvas.
-    PALETTE_WIDGET_IDS.forEach((id, idx) => {
-      const code = paletteCodeForIndex(idx);
-      paletteCodes.set(id, code);
-      usedCodes.add(code);
-      paletteEntries.push({ code, kind: "palette", widgetId: id });
-    });
-
-    const existingEntries = [];
-    const widgetsSorted = [...state.widgets].sort((a, b) => {
-      if (a.row === b.row) return a.col - b.col;
-      return a.row - b.row;
-    });
-    let nextIndex = 0;
-    widgetsSorted.forEach((widget) => {
-      let code = codeForIndex(nextIndex);
-      while (usedCodes.has(code)) {
-        nextIndex += 1;
-        code = codeForIndex(nextIndex);
-      }
-      usedCodes.add(code);
-      existingEntries.push({ code, kind: "existing", id: widget.id });
-      nextIndex += 1;
-    });
-
-    state.codeMap = [...existingEntries, ...paletteEntries];
-  }
-
-  function findCodeEntry(code) {
-    const normalized = code?.toLowerCase?.();
-    if (!normalized) return null;
-    return state.codeMap.find((entry) => entry.code === normalized) || null;
   }
 
   function renderPalette(filter = "") {
@@ -492,14 +436,10 @@
         .map((id) => getWidgetDef(id))
         .filter((def) => !term || def.name.toLowerCase().includes(term) || def.id.includes(term))
         .forEach((def) => {
-          const code = paletteCodes.get(def.id) || "";
           const item = document.createElement("div");
           item.className = "widget-item";
           const label = document.createElement("span");
           label.textContent = def.name;
-          const codeEl = document.createElement("span");
-          codeEl.className = "code";
-          codeEl.textContent = code;
           const add = document.createElement("button");
           add.className = "add";
           add.type = "button";
@@ -508,7 +448,6 @@
           add.addEventListener("click", () => addWidget(def.id));
 
           item.dataset.widgetId = def.id;
-          item.appendChild(codeEl);
           item.appendChild(label);
           item.appendChild(add);
           list.appendChild(item);
@@ -518,7 +457,7 @@
     });
   }
 
-  function createWidgetElement(widget, code) {
+  function createWidgetElement(widget) {
     const template = document.getElementById("widget-template");
     const el = template.content.firstElementChild.cloneNode(true);
     const def = getWidgetDef(widget.type);
@@ -550,9 +489,6 @@
     } else {
       title.textContent = label;
     }
-    const badge = el.querySelector(".code-badge");
-    badge.textContent = code || "";
-
     const body = el.querySelector(".widget-body");
     if (body) {
       fillWidgetBody(body, widget);
@@ -596,10 +532,8 @@
 
   function renderWidgets() {
     pageInner.innerHTML = "";
-    const codeLookup = new Map(state.codeMap.filter((e) => e.kind === "existing").map((e) => [e.id, e.code]));
     state.widgets.forEach((widget) => {
-      const code = codeLookup.get(widget.id) || "";
-      const el = createWidgetElement(widget, code);
+      const el = createWidgetElement(widget);
       pageInner.appendChild(el);
     });
     renderSelection();
@@ -1007,114 +941,6 @@
     setTimeout(() => toast.remove(), 3200);
   }
 
-  function resetPlacementForm() {
-    if (placementRowInput) placementRowInput.value = "";
-    if (placementColInput) placementColInput.value = "";
-  }
-
-  function hidePlacementForm() {
-    state.pendingPlacement = null;
-    if (placementForm) placementForm.hidden = true;
-    resetPlacementForm();
-  }
-
-  function startPlacement(target) {
-    state.pendingPlacement = target;
-    const def = getWidgetDef(target.widgetId);
-    if (placementWidgetName) placementWidgetName.textContent = def?.name || target.widgetId;
-    if (placementWidgetCode) placementWidgetCode.textContent = target.code;
-    resetPlacementForm();
-    if (placementForm) placementForm.hidden = false;
-    placementRowInput?.focus();
-  }
-
-  function openPalette() {
-    state.paletteOpen = true;
-    state.selectMode = false;
-    state.codeBuffer = "";
-    hidePlacementForm();
-    commandPalette.hidden = false;
-    commandInput.value = "";
-    commandInput.focus();
-  }
-
-  function closePalette() {
-    state.paletteOpen = false;
-    state.selectMode = false;
-    state.codeBuffer = "";
-    hidePlacementForm();
-    commandPalette.hidden = true;
-    commandInput.value = "";
-  }
-
-  function handleCommandKey(event) {
-    if (event.key === "Escape") {
-      closePalette();
-      return;
-    }
-    if (event.key === "/" && !state.paletteOpen) {
-      openPalette();
-      event.preventDefault();
-      return;
-    }
-    if (!state.paletteOpen) {
-      if (event.key === "Delete" && state.selectedId) {
-        removeWidget(state.selectedId);
-      }
-      return;
-    }
-    if (event.key === "Enter") {
-      // Parse typed commands: e.g., "add a 5 3" or "select a"
-      const value = commandInput.value.trim();
-      if (!value) return;
-      const parts = value.split(/\s+/);
-      if (parts[0] === "add" && parts.length >= 4) {
-        const code = parts[1].toLowerCase();
-        const row = Number(parts[2]) - 1;
-        const col = Number(parts[3]) - 1;
-        handleCodeSelection(code, row, col);
-      } else if (parts[0] === "select" && parts[1]) {
-        handleCodeSelection(parts[1].toLowerCase());
-      } else {
-        const entry = findCodeEntry(value);
-        if (entry) {
-          handleCodeSelection(entry.code);
-        } else {
-          showToast("Commands: add <code> <row> <col> · select <code>");
-        }
-      }
-      return;
-    }
-    if (event.key.toLowerCase() === "s") {
-      state.selectMode = true;
-      state.codeBuffer = "";
-      showToast("Select mode: type widget code, then enter row and column in the palette.");
-      return;
-    }
-    if (state.selectMode && /^[a-z]$/i.test(event.key)) {
-      state.codeBuffer += event.key.toLowerCase();
-      const buffer = state.codeBuffer;
-      const exact = findCodeEntry(buffer);
-      const hasLonger = state.codeMap.some((entry) => entry.code.startsWith(buffer) && entry.code.length > buffer.length);
-      if (exact && (!hasLonger || buffer.length >= 2)) {
-        state.codeBuffer = "";
-        handleCodeSelection(buffer);
-      } else if (buffer.length >= 2 && !exact) {
-        state.codeBuffer = "";
-        showToast("Unknown code.");
-      }
-      event.preventDefault();
-    }
-    if (state.selectMode && event.key === "Enter" && state.codeBuffer) {
-      const code = state.codeBuffer;
-      state.codeBuffer = "";
-      handleCodeSelection(code);
-    }
-    if (state.selectMode && event.key === "Delete" && state.selectedId) {
-      removeWidget(state.selectedId);
-    }
-  }
-
   function ensureGhost() {
     if (!ghostEl) {
       ghostEl = document.createElement("div");
@@ -1221,41 +1047,7 @@
     finishDrag(false);
   }
 
-  function handleCodeSelection(code, providedRow = null, providedCol = null) {
-    const target = state.codeMap.find((entry) => entry.code === code);
-    if (!target) {
-      showToast("Unknown code.");
-      return;
-    }
-    if (target.kind === "existing") {
-      state.selectedId = target.id;
-      renderSelection();
-      state.codeBuffer = "";
-      if (state.selectMode) {
-        commandInput?.focus();
-      } else {
-        closePalette();
-      }
-      return;
-    }
-    if (target.kind === "palette") {
-      if (Number.isInteger(providedRow) && Number.isInteger(providedCol)) {
-        if (providedRow < 0 || providedCol < 0 || providedRow >= GRID.rows || providedCol >= GRID.cols) {
-          showToast("Row/column out of bounds.");
-          return;
-        }
-        const placed = addWidget(target.widgetId, providedRow, providedCol);
-        if (placed) closePalette();
-        return;
-      }
-      state.selectMode = false;
-      state.codeBuffer = "";
-      startPlacement({ ...target, code });
-    }
-  }
-
   function render() {
-    buildCodeMap();
     renderPalette();
     renderWidgets();
   }
@@ -1265,8 +1057,6 @@
       btn.addEventListener("click", () => handleHeaderAction(btn.dataset.action));
     });
     document.querySelector(".search").addEventListener("input", handleSearch);
-    document.querySelector('[data-action="command-close"]')?.addEventListener("click", closePalette);
-    document.addEventListener("keydown", handleCommandKey);
     pageInner.addEventListener("click", (event) => {
       if (event.target === pageInner) {
         state.selectedId = null;
@@ -1292,29 +1082,6 @@
         offsetX: def.defaultSize[0] * GRID.cell * 0.5,
         offsetY: def.defaultSize[1] * GRID.cell * 0.5,
       });
-    });
-
-    placementFormFields?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      if (!state.pendingPlacement) return;
-      const row = Number(placementRowInput.value) - 1;
-      const col = Number(placementColInput.value) - 1;
-      if (!Number.isFinite(row) || !Number.isFinite(col)) {
-        showToast("Row/column must be numbers.");
-        placementRowInput?.focus();
-        return;
-      }
-      if (row < 0 || col < 0 || row >= GRID.rows || col >= GRID.cols) {
-        showToast("Row/column out of bounds.");
-        return;
-      }
-      const placed = addWidget(state.pendingPlacement.widgetId, row, col);
-      if (placed) closePalette();
-    });
-
-    document.querySelector('[data-action="placement-cancel"]')?.addEventListener("click", () => {
-      hidePlacementForm();
-      commandInput?.focus();
     });
   }
 

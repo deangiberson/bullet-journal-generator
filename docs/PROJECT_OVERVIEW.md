@@ -2,13 +2,13 @@
 
 ## Goal
 - Minimal web app to design printable bullet journal templates on a grid with fixed-size widgets (iPhone-style variants), drag/drop, hard snap, and blocked placement on overlap/overflow. Export to PDF that matches the on-screen layout (parity preferred; relax if needed).
-- Accessibility by simplicity: clear keyboard/focus paths, minimal controls, explicit remove (big X), undo/redo for layout edits.
+- Accessibility by simplicity: clear pointer interactions, minimal controls, explicit remove (big X), undo/redo for layout edits.
 - Client-heavy by default; server kept thin for static delivery. PDF is client-side unless later proven infeasible.
 
 ## Layout Model
 - Canvas: US Letter, portrait; working area 816×1056 px at ~96 dpi with 48 px padding on all sides → usable grid area 720×960 px.
 - Grid: 24 px cells, no gutter. This yields 30 columns × 40 rows in the usable area.
-- Widget sizes (v1): fixed variants snapping to the grid; allowed sizes: 1×1, 2×1, 2×2, 3×2, 3×3, 4×3, 4×4 (expand later if needed). All variants must be defined in grid cells.
+- Widget sizes (v1): fixed variants snapping to the grid; dimensions expressed in grid cells on the 30×40 canvas and defined per widget in `docs/WIDGET_SPEC_TODO.md`. All variants must be defined in grid cells.
 - Hard snap; drop rejected on overlap or overflow. Flat plane; no z-order.
 - Drag-and-drop: drag from palette or existing widgets; snap-preview ghost shows placement (blue = valid, red = blocked) before drop.
 - Removal via explicit control. Undo/redo required for placement and removal.
@@ -46,7 +46,7 @@
 - Undo/redo operates on the layout model; re-render reflects the state.
 
 ## Testing Approach
-- BDD with `behave`: feature files cover placement, snapping/blocking, removal, undo/redo, save/reload, import/export JSON, PDF parity, keyboard/focus accessibility.
+- BDD with `behave`: feature files cover placement, snapping/blocking, removal, undo/redo, save/reload, import/export JSON, and PDF parity.
 - TDD for implementation at unit/integration levels aligned to Behave steps.
 
 ## Behave Feature Coverage (current)
@@ -55,14 +55,6 @@
 - Undo/redo: placement and removal.
 - Persistence: save/reload via local storage; export/import JSON.
 - PDF export: on-screen parity for positioned widgets.
-- Accessibility: keyboard-based add/select/remove with predictable focus.
-
-- Keyboard-first command palette triggered by `/`; `Esc` cancels any mode, `Enter` confirms, `Tab` cycles normally.
-- Selection mode: press `s` after `/` to enter select; one/two-letter codes shown in the top-left of selectable items (new and existing). Codes stay stable relative to on-screen order/positions, scanning left-to-right, top-to-bottom by grid lines.
-- Placement: after picking a widget, choose row then column via inline palette inputs (no prompts). Snap enforced; blocked placements show an error toast and do not change layout.
-- Removal: select an existing widget via codes and press `Delete` to remove.
-- Error handling: invalid row/col or blocked placement shows a toast with the error and returns to root (idle) mode.
-- Focus and hints: palette and widget codes remain keyboard-addressable; clear focus states after each action; hints persist so shortcuts are discoverable.
 
 ## Known Limitations (accepted for now)
 - Widgets are decorative templates only (no text entry/checks), making this a printable template tool rather than an interactive planner.
@@ -76,5 +68,5 @@
 - Typeface: Inter (locked); bundled locally (woff2/woff) at 400/500/600/700 and preloaded so screen/PDF stay aligned.
 - Color system: cool neutrals with a single accent (e.g., electric blue #3b6df6 or cyan #32c1ff). Dark shell option: bg #0f1115, panels #161921, borders #1f2430, text #e9edf5, muted #9aa3b5. Light option: bg #f7f8fb, panels #ffffff, borders #d8dde6, text #1b1f2a, muted #6b7280.
 - Layout/shape: 8 px spacing scale, 8–10 px corner radius, 1 px borders/dividers, subtle shadows on widgets.
-- Components: compact header with pill buttons; primary action in accent. Palette with minimal outlines and subtle hover/focus glow. Canvas grid crisp; widgets with thin border, soft shadow; code badges top-right with accent text on muted background. Toasts bottom-right/center with short text and accent edge.
+- Components: compact header with pill buttons; primary action in accent. Palette with minimal outlines and subtle hover/focus glow. Canvas grid crisp; widgets with thin border and soft shadow. Toasts bottom-right/center with short text and accent edge.
 - Motion: light transitions (150–200 ms fades/scale), avoid heavy animation. Line icons, no skeuomorphism.

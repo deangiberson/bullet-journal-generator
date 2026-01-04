@@ -28,7 +28,6 @@
     <aside class="panel palette" aria-label="Widget palette">
       <div class="panel-header">
         <h1>Widgets</h1>
-        <div class="hint">Press “/” for keyboard commands</div>
       </div>
       <input type="search" class="search" placeholder="Search widgets" aria-label="Search widgets">
       <div class="categories" id="widget-categories"></div>
@@ -47,7 +46,7 @@
         </div>
       </div>
       <div class="page-footer">
-        <div class="hint">Tab to navigate widgets. “/” opens commands. Del removes selected.</div>
+        <div class="hint">Drag widgets from the palette. Click a widget to select; use the X to remove.</div>
         <div class="grid-controls">
           <button data-action="zoom-out" class="ghost small">Zoom -</button>
           <button data-action="zoom-in" class="ghost small">Zoom +</button>
@@ -58,54 +57,8 @@
 
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-  <div id="command-palette" hidden>
-    <div class="command-shell" role="dialog" aria-modal="true" aria-label="Command palette">
-      <div class="command-header">
-        <div class="command-title">Commands</div>
-        <button class="ghost small" data-action="command-close" aria-label="Close command palette">×</button>
-      </div>
-      <div class="command-body">
-        <p class="command-hint">Press “s” to select. Type a widget code (shown on grid and palette) and fill row/column to place.</p>
-        <label class="sr-only" for="command-input">Command input</label>
-        <input id="command-input" type="text" placeholder="Type command or widget code" aria-label="Command input">
-        <div class="placement-form" id="placement-form" hidden>
-          <div class="placement-header">
-            <div>
-              <div class="placement-title">Place widget</div>
-              <div class="placement-subtitle">
-                <span id="placement-widget-name">Widget</span>
-                <span class="code-pill" id="placement-widget-code"></span>
-              </div>
-            </div>
-            <button class="ghost small" type="button" data-action="placement-cancel" aria-label="Cancel placement">Cancel</button>
-          </div>
-          <form id="placement-form-fields" class="placement-grid">
-            <label>
-              <span>Row (1-40)</span>
-              <input id="placement-row" type="number" min="1" max="40" inputmode="numeric" autocomplete="off">
-            </label>
-            <label>
-              <span>Column (1-30)</span>
-              <input id="placement-col" type="number" min="1" max="30" inputmode="numeric" autocomplete="off">
-            </label>
-            <button type="submit" class="primary small">Place</button>
-          </form>
-          <div class="command-hints">
-            <div>Type code, then row and column. Snap + overlap checks apply.</div>
-            <div>Press Esc to exit or Cancel to pick another widget.</div>
-          </div>
-        </div>
-        <div class="command-hints">
-          <div><strong>/</strong> open · <strong>Esc</strong> cancel · <strong>s</strong> select · <strong>Delete</strong> remove selected</div>
-          <div>Codes scan left→right, top→bottom. Placement uses row then column.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <template id="widget-template">
     <div class="widget-instance" tabindex="0">
-      <div class="code-badge"></div>
       <div class="remove" role="button" aria-label="Remove widget">×</div>
       <div class="widget-title"></div>
       <div class="widget-body"></div>
