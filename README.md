@@ -71,6 +71,25 @@ uv run flask --app app run --debug
 
 The app will be available at `http://localhost:5000`
 
+### Building for GitHub Pages
+
+To build the static site for GitHub Pages deployment:
+
+```bash
+uv run python build.py
+```
+
+This will:
+- Convert the Flask template to static HTML
+- Copy all assets to the `/docs` folder
+- Create a `.nojekyll` file for GitHub Pages
+
+After building, commit the `/docs` folder and configure your GitHub repository:
+1. Go to Settings → Pages
+2. Set Source to "Deploy from a branch"
+3. Select your main branch and `/docs` folder
+4. Save and wait for deployment
+
 ## Usage
 
 ### Creating a Layout
@@ -124,6 +143,7 @@ bullet-journal-generator/
 - **Server-Thin**: Flask serves static files only; no server-side rendering or state
 - **Flat Layout**: Widgets have no z-order; later additions don't overlap earlier ones
 - **Grid Model**: All positions and sizes expressed in 24px grid cells
+- **Dual Deployment**: Flask app for local development, static build for GitHub Pages (via `build.py`)
 
 ### Widget Specifications
 

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bullet Journal Builder</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="preload" href="./fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/Inter-Medium.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/Inter-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body>
+  <header class="app-header">
+    <div class="title">Bullet Journal Builder</div>
+    <div class="actions" role="toolbar" aria-label="Page actions">
+      <button data-action="new-page" class="ghost">New Page</button>
+      <button data-action="undo" class="ghost">Undo</button>
+      <button data-action="redo" class="ghost">Redo</button>
+      <button data-action="import-json" class="ghost">Import JSON</button>
+      <button data-action="export-json" class="ghost">Export JSON</button>
+      <button data-action="export-pdf" class="primary">Export PDF</button>
+    </div>
+    <div class="status">US Letter · Portrait · Grid on</div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel palette" aria-label="Widget palette">
+      <div class="panel-header">
+        <h1>Widgets</h1>
+      </div>
+      <input type="search" class="search" placeholder="Search widgets" aria-label="Search widgets">
+      <div class="categories" id="widget-categories"></div>
+    </aside>
+
+    <section class="panel canvas" aria-label="Page canvas">
+      <div class="canvas-header">
+        <h1>Page</h1>
+        <div class="canvas-actions">
+          <button data-action="toggle-grid" class="ghost">Show/Hide Grid</button>
+        </div>
+      </div>
+      <div class="page">
+        <div class="page-inner" id="page-inner">
+          <!-- Widgets rendered here -->
+        </div>
+      </div>
+      <div class="page-footer">
+        <div class="hint">Drag widgets from the palette. Click a widget to select; use the X to remove.</div>
+        <div class="grid-controls">
+          <button data-action="zoom-out" class="ghost small">Zoom -</button>
+          <button data-action="zoom-in" class="ghost small">Zoom +</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <template id="widget-template">
+    <div class="widget-instance" tabindex="0">
+      <div class="remove" role="button" aria-label="Remove widget">×</div>
+      <div class="widget-title"></div>
+      <div class="widget-body"></div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
