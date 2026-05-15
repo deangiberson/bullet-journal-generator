@@ -6,6 +6,8 @@ Global guidance from answers so far:
 - Size limits: max width = full document width; max height = full document height. Min width/height must be decided per widget.
 - All variants must map explicitly to grid cell sizes (no freeform sizing).
 - Grid reference: 30 cols × 40 rows of 24 px cells (720×960 px usable). Variant sizes below are expressed as width×height in grid cells and should snap exactly to that grid.
+- **Widget resizing:** Widgets expose a resize handle (bottom-right corner, appears on hover/select). Dragging it snaps the widget to new grid-cell dimensions within [minSize, page bounds]. The area-free check applies — blocked zones show a red ghost. Undo/redo covers resize.
+- **Content that scales with size:** Some widgets adapt their content density to the current widget size rather than showing fixed variants. The governing rule is: *fill the available interior space without overflowing.* Example: Todo — line count is computed from available pixel height each time the widget renders. This pattern should be applied to Notes, Gratitude Log, Daily Schedule, Habit Tracker, and Goal Tracker as those widgets are fleshed out.
 
 For each widget below, please fill in:
 - Min width (in grid cells)
@@ -54,12 +56,12 @@ For each widget below, please fill in:
 
 ## Todo
 - Min width: 9 cells
-- Min height: 8 cells
-- Fields/structure: list area with checkbox markers and text lines; optional header “Todo.”
-- Presets/defaults: show 5–7 lines with empty checkboxes; header on by default.
-- Interactivity: none (decorative).
-- Visual variants: compact (9×8) with ~7 lines; medium (12×12) with ~10–12 lines.
-- Styling constraints: muted checkbox outlines; thin border; header in accent; lines spaced evenly.
+- Min height: 4 cells
+- Fields/structure: list area with checkbox markers and text lines; header “Todo.”
+- Presets/defaults: default size 9×8; line count auto-calculated to fill available height.
+- Interactivity: resizable via bottom-right handle; line count updates live as height changes.
+- Line count formula: `floor((height_px - padding*2 - title_height - gap) / row_height)` where row_height ≈ 14px.
+- Styling constraints: muted checkbox outlines; thin border; header in accent; lines spaced evenly at 4px gap.
 
 ## Daily Schedule
 - Min width: 12 cells (time column + text area)
