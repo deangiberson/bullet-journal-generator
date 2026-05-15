@@ -16,18 +16,18 @@
 
   const PDF_EXPORT_SCALE = 2;
   const WIDGETS = [
-    { id: "current-date", name: "Current Date", defaultSize: [6, 2] },
-    { id: "month-calendar", name: "Month Calendar", defaultSize: [14, 8] },
-    { id: "three-month-calendar", name: "3-Month Calendar", defaultSize: [22, 8] },
-    { id: "notes", name: "Notes", defaultSize: [10, 8] },
-    { id: "todo", name: "Todo", defaultSize: [9, 8] },
-    { id: "daily-schedule", name: "Daily Schedule", defaultSize: [12, 12] },
-    { id: "habit-tracker", name: "Habit Tracker", defaultSize: [14, 6] },
-    { id: "mood-tracker", name: "Mood Tracker", defaultSize: [10, 8] },
-    { id: "gratitude-log", name: "Gratitude Log", defaultSize: [8, 5] },
-    { id: "goal-tracker", name: "Goal Tracker", defaultSize: [9, 6] },
-    { id: "pomodoro-tracker", name: "Pomodoro Tracker", defaultSize: [8, 4] },
-    { id: "time-tracker", name: "Time Tracker", defaultSize: [12, 5] },
+    { id: "current-date", name: "Current Date", defaultSize: [6, 2], minSize: [6, 2] },
+    { id: "month-calendar", name: "Month Calendar", defaultSize: [14, 8], minSize: [14, 8] },
+    { id: "three-month-calendar", name: "3-Month Calendar", defaultSize: [22, 8], minSize: [22, 8] },
+    { id: "notes", name: "Notes", defaultSize: [10, 8], minSize: [10, 4] },
+    { id: "todo", name: "Todo", defaultSize: [9, 8], minSize: [9, 4] },
+    { id: "daily-schedule", name: "Daily Schedule", defaultSize: [12, 12], minSize: [12, 6] },
+    { id: "habit-tracker", name: "Habit Tracker", defaultSize: [14, 6], minSize: [14, 4] },
+    { id: "mood-tracker", name: "Mood Tracker", defaultSize: [10, 8], minSize: [10, 6] },
+    { id: "gratitude-log", name: "Gratitude Log", defaultSize: [8, 5], minSize: [8, 3] },
+    { id: "goal-tracker", name: "Goal Tracker", defaultSize: [9, 6], minSize: [9, 4] },
+    { id: "pomodoro-tracker", name: "Pomodoro Tracker", defaultSize: [8, 4], minSize: [8, 4] },
+    { id: "time-tracker", name: "Time Tracker", defaultSize: [12, 5], minSize: [12, 4] },
   ];
 
   const WIDGET_LABELS = {
@@ -59,6 +59,7 @@
   const statusLine = document.getElementById("status-line");
   let ghostEl = null;
 
+  let resizeGhostEl = null;
   const fontsReady = loadInterFonts();
 
   const state = {
@@ -69,6 +70,7 @@
     zoom: 1,
     selectedId: null,
     drag: null,
+    resize: null,
   };
 
   function loadInterFonts() {
@@ -86,6 +88,15 @@
 
   function getWidgetDef(id) {
     return WIDGETS.find((w) => w.id === id);
+  }
+
+  function calcTodoLines(widgetHeight) {
+    const widgetPad = widgetHeight <= 1 ? 4 : widgetHeight <= 2 ? 6 : 8;
+    const titleH = 14; // approximate rendered height of the title row
+    const gap = 6;     // gap between title and body
+    const rowH = 14;   // todo-row height (10px box + 4px gap)
+    const available = widgetHeight * GRID.cell - widgetPad * 2 - titleH - gap;
+    return Math.max(1, Math.floor(available / rowH));
   }
 
   function formatHourLabel(hour) {
@@ -384,8 +395,7 @@
         body.appendChild(buildNotesSurface());
         break;
       case "todo": {
-        const lines = widget.height <= 8 ? 7 : 11;
-        body.appendChild(buildTodoList(lines));
+        body.appendChild(buildTodoList(calcTodoLines(widget.height)));
         break;
       }
       case "daily-schedule":
@@ -644,6 +654,20 @@
     const before = cloneWidgets();
     widget.row = newRow;
     widget.col = newCol;
+    recordHistory(before);
+    persist();
+    render();
+    return true;
+  }
+
+  function resizeWidget(id, newWidth, newHeight) {
+    const widget = state.widgets.find((w) => w.id === id);
+    if (!widget) return false;
+    if (widget.width === newWidth && widget.height === newHeight) return true;
+    if (!areaFree(widget.row, widget.col, newWidth, newHeight, id)) return false;
+    const before = cloneWidgets();
+    widget.width = newWidth;
+    widget.height = newHeight;
     recordHistory(before);
     persist();
     render();
@@ -1040,6 +1064,92 @@
     document.removeEventListener("pointermove", handlePointerMove);
     document.removeEventListener("pointerup", handlePointerUp);
     document.removeEventListener("pointercancel", handlePointerCancel);
+  }
+
+  function ensureResizeGhost() {
+    if (!resizeGhostEl) {
+      resizeGhostEl = document.createElement("div");
+      resizeGhostEl.className = "widget-ghost";
+      pageInner.appendChild(resizeGhostEl);
+    }
+    return resizeGhostEl;
+  }
+
+  function clearResizeGhost() {
+    if (resizeGhostEl) {
+      resizeGhostEl.remove();
+      resizeGhostEl = null;
+    }
+  }
+
+  function attachResize(el, widget) {
+    const handle = el.querySelector(".widget-resize-handle");
+    if (!handle) return;
+    handle.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      handle.setPointerCapture(event.pointerId);
+      state.resize = {
+        pointerId: event.pointerId,
+        widgetId: widget.id,
+        targetWidth: widget.width,
+        targetHeight: widget.height,
+        valid: true,
+      };
+      document.addEventListener("pointermove", handleResizeMove);
+      document.addEventListener("pointerup", handleResizeUp);
+      document.addEventListener("pointercancel", handleResizeCancel);
+    });
+  }
+
+  function handleResizeMove(event) {
+    if (!state.resize || state.resize.pointerId !== event.pointerId) return;
+    const widget = state.widgets.find((w) => w.id === state.resize.widgetId);
+    if (!widget) return;
+    const zoom = getZoomScale();
+    const rect = pageInner.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / zoom - GRID.padding;
+    const y = (event.clientY - rect.top) / zoom - GRID.padding;
+    const def = getWidgetDef(widget.type);
+    const [minW, minH] = def?.minSize ?? [2, 2];
+    const rawW = Math.round((x - widget.col * GRID.cell) / GRID.cell);
+    const rawH = Math.round((y - widget.row * GRID.cell) / GRID.cell);
+    const clampedW = Math.max(minW, Math.min(GRID.cols - widget.col, rawW));
+    const clampedH = Math.max(minH, Math.min(GRID.rows - widget.row, rawH));
+    const valid = areaFree(widget.row, widget.col, clampedW, clampedH, widget.id);
+    state.resize.targetWidth = clampedW;
+    state.resize.targetHeight = clampedH;
+    state.resize.valid = valid;
+    const ghost = ensureResizeGhost();
+    ghost.style.left = `${GRID.padding + widget.col * GRID.cell}px`;
+    ghost.style.top = `${GRID.padding + widget.row * GRID.cell}px`;
+    ghost.style.width = `${clampedW * GRID.cell}px`;
+    ghost.style.height = `${clampedH * GRID.cell}px`;
+    ghost.classList.toggle("invalid", !valid);
+  }
+
+  function finishResize(apply) {
+    if (!state.resize) return;
+    const r = state.resize;
+    if (apply && r.valid) {
+      resizeWidget(r.widgetId, r.targetWidth, r.targetHeight);
+    }
+    clearResizeGhost();
+    state.resize = null;
+    document.removeEventListener("pointermove", handleResizeMove);
+    document.removeEventListener("pointerup", handleResizeUp);
+    document.removeEventListener("pointercancel", handleResizeCancel);
+  }
+
+  function handleResizeUp(event) {
+    if (!state.resize || state.resize.pointerId !== event.pointerId) return;
+    finishResize(true);
+  }
+
+  function handleResizeCancel(event) {
+    if (!state.resize || state.resize.pointerId !== event.pointerId) return;
+    finishResize(false);
   }
 
   function getZoomScale() {

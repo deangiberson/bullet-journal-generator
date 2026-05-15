@@ -208,6 +208,8 @@ button.small {
   justify-content: space-between;
   align-items: center;
   background: #fafbfc;
+  touch-action: none;
+  cursor: grab;
 }
 
 .widget-item .add {
@@ -321,6 +323,33 @@ button.small {
   gap: 6px;
   flex: 1;
   min-height: 0;
+}
+
+.widget-resize-handle {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  touch-action: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background: radial-gradient(circle at 100% 100%,
+    transparent 60%,
+    var(--border) 60%, var(--border) 70%,
+    transparent 70%),
+    linear-gradient(135deg, transparent 40%, var(--border) 40%, var(--border) 50%, transparent 50%),
+    linear-gradient(135deg, transparent 60%, var(--border) 60%, var(--border) 70%, transparent 70%);
+}
+
+.widget-instance:hover .widget-resize-handle,
+.widget-instance.selected .widget-resize-handle {
+  opacity: 1;
+}
+
+.widget-instance {
+  cursor: move;
 }
 
 .widget-ghost {
