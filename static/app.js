@@ -507,13 +507,16 @@
     });
 
     attachDrag(el, widget);
+    attachResize(el, widget);
 
     return el;
   }
 
   function attachDrag(el, widget) {
     el.addEventListener("pointerdown", (event) => {
+      if (event.target.closest(".remove, .widget-resize-handle")) return;
       event.preventDefault();
+      el.setPointerCapture(event.pointerId);
       const zoom = getZoomScale();
       const rect = el.getBoundingClientRect();
       const offsetX = (event.clientX - rect.left) / zoom;
@@ -1082,6 +1085,7 @@
       const def = getWidgetDef(widgetId);
       if (!def) return;
       event.preventDefault();
+      target.setPointerCapture(event.pointerId);
       startDrag({
         pointerId: event.pointerId,
         mode: "palette",
