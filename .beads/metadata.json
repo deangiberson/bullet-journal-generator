@@ -1,5 +1,8 @@
 {
-  "database": "beads.db",
-  "jsonl_export": "beads.jsonl",
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "bullet_journal_generator",
+  "project_id": "7ff11960-b1ea-4c11-b1b5-b6acfe3970fc",
   "last_bd_version": "0.24.3"
 }
